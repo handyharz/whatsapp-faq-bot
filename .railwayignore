@@ -1,0 +1,10 @@
+# Railway ignore file
+node_modules/
+auth/
+logs/
+*.log
+.env
+.env.local
+.DS_Store
+*.md
+!README.md

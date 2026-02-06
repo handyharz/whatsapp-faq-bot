@@ -1,0 +1,82 @@
+[
+  {
+    "keywords": ["hello", "hi", "hey", "good morning", "good afternoon", "good evening"],
+    "answer": "Hello! 👋 Welcome to Abuja Ram Suya! We serve the best suya in Abuja. How can I help you today?\n\nSend 'HELP' to see what I can assist you with. 😊",
+    "category": "greeting"
+  },
+  {
+    "keywords": ["help", "commands", "options", "menu", "what can you do"],
+    "answer": "I can help you with:\n\n🍢 **Menu & Orders**\n• MENU - See our suya menu\n• PRICE - Pricing information\n• ORDER - How to place an order\n• DELIVERY - Delivery information\n\n📍 **Location**\n• LOCATION - Our address (Aminu Kano Wuse 2)\n• HOURS - Business hours\n\n📞 **Contact**\n• CONTACT - Contact information\n• INSTAGRAM - Follow us @harzkane\n\nJust ask me anything! 😊",
+    "category": "help"
+  },
+  {
+    "keywords": ["menu", "what do you have", "suya", "types", "what's available", "what kind"],
+    "answer": "🍢 **Our Suya Menu**\n\n**Suya Types:**\n• **Beef Suya** - Tender, spicy beef suya\n• **Chicken Suya** - Grilled chicken suya\n• **Ram Suya** - Our specialty! Premium ram suya\n• **Kidney Suya** - Grilled kidney\n• **Liver Suya** - Grilled liver\n• **Gizzard Suya** - Grilled gizzard\n\n**Sizes:**\n• **Single Stick** - 1 stick\n• **Full Plate** - 10-12 sticks\n• **Half Plate** - 5-6 sticks\n\n**Spice Levels:**\n• **Mild** - Not too spicy\n• **Medium** - Moderate spice\n• **Hot** - Very spicy (our specialty!)\n\n**Sides:**\n• Onions & Cabbage\n• Fresh Tomatoes\n• Spicy Pepper Sauce\n\n**Drinks:**\n• Soft Drinks (Coke, Fanta, Sprite)\n• Water\n• Fresh Juice\n\n**Combo:**\n• Suya + Drink + Sides - Special price!\n\n**Daily Specials:**\nCheck our Instagram @harzkane for today's specials!\n\nWant to order? Send 'ORDER' or tell me what you'd like! 🍢",
+    "category": "menu"
+  },
+  {
+    "keywords": ["price", "cost", "how much", "pricing", "fee", "charges", "naira", "₦"],
+    "answer": "💰 **Our Prices**\n\n**Suya Prices:**\n• **Beef Suya:** ₦500 per stick\n• **Chicken Suya:** ₦600 per stick\n• **Ram Suya:** ₦800 per stick (our specialty!)\n• **Kidney Suya:** ₦700 per stick\n• **Liver Suya:** ₦600 per stick\n• **Gizzard Suya:** ₦700 per stick\n\n**Plates:**\n• **Full Plate (10-12 sticks):** ₦5,000 - ₦7,000 (depending on type)\n• **Half Plate (5-6 sticks):** ₦2,500 - ₦3,500\n\n**Sides:**\n• Onions & Cabbage: ₦200\n• Fresh Tomatoes: ₦300\n• Spicy Pepper Sauce: ₦200\n\n**Drinks:**\n• Soft Drinks: ₦300\n• Water: ₦200\n• Fresh Juice: ₦500\n\n**Combo Deals:**\n• 5 Sticks + Drink + Sides: ₦3,500 (Save ₦500!)\n• Full Plate + 2 Drinks: ₦6,000 (Save ₦800!)\n\n**Delivery Fee:**\n• Wuse 2, Garki, Maitama: ₦500 (Free for orders above ₦5,000)\n• Other Abuja areas: ₦1,000\n\n**Special Offers:**\n• 10% off first order\n• Free delivery for orders above ₦5,000\n\nFor specific item prices, just ask! 💬",
+    "category": "pricing"
+  },
+  {
+    "keywords": ["hours", "open", "closed", "when", "time", "business hours", "are you open"],
+    "answer": "🕐 **Business Hours**\n\n**Monday - Sunday**: 4:00 AM - 11:30 PM WAT\n\n**Peak Hours:**\n• Lunch: 12pm - 1pm\n• Dinner: 6pm - 7pm\n\n**Public Holidays**: Open (may have reduced hours)\n\n**Online Orders:**\nAvailable 24/7 via WhatsApp!\n\n**Response Time:**\n• Business hours: Within 5 minutes\n• After hours: Next business day\n\n**Visit Us:**\nAminu Kano Wuse 2, Abuja\n\nWe're here to serve you! 😊",
+    "category": "hours"
+  },
+  {
+    "keywords": ["location", "address", "where", "place", "restaurant", "find us", "wuse"],
+    "answer": "📍 **Our Location**\n\n**Address:**\nAbuja Ram Suya\nAminu Kano\nWuse 2, Abuja\nNigeria\n\n**Landmarks:**\n• In Wuse 2 area\n• Near Aminu Kano Street\n\n**Directions:**\n• Easy to find in Wuse 2\n• Look for our suya stand/shop\n\n**Parking:** Available\n\n**Dine-In:**\nYes! Come visit us for fresh suya.\n\n**Takeaway:**\nAvailable - Order ahead and pick up!\n\n**Delivery:**\nWe deliver to Wuse 2, Garki, Maitama, and nearby areas!\n\nNeed directions? Just ask! 🗺️",
+    "category": "location"
+  },
+  {
+    "keywords": ["contact", "phone", "email", "reach", "call", "number", "whatsapp"],
+    "answer": "📞 **Contact Us**\n\n**Phone/WhatsApp:**\n+234 810 706 0160\n08107060160\n\n**Email:**\nharzkane@gmail.com\n\n**Instagram:**\n@harzkane\n\n**Response Time:**\n• WhatsApp: Within 5 minutes (business hours)\n• Email: Within 24 hours\n\n**For Orders:**\nWhatsApp is fastest! Just send your order here.\n\n**Best Time to Call:**\n10am - 10pm daily\n\nWe're here to help! 😊",
+    "category": "contact"
+  },
+  {
+    "keywords": ["order", "buy", "purchase", "place order", "how to order", "i want to order", "suya order"],
+    "answer": "🛒 **How to Place an Order**\n\n**Via WhatsApp (Easiest!):**\n\n1. Send me:\n   • Type of suya (beef, chicken, ram, etc.)\n   • Quantity (number of sticks or plate size)\n   • Spice level (mild, medium, hot)\n   • Your delivery address (or say 'pickup')\n   • Preferred delivery time\n\n2. I'll confirm:\n   • Price\n   • Availability\n   • Delivery time (or pickup time)\n\n3. Make payment\n4. Receive confirmation\n\n**Example Order:**\n\"I want 10 sticks of ram suya, hot spice, with onions and 2 Cokes. Deliver to [address] at 7pm\"\n\n**Payment Methods:**\n• Bank transfer\n• Cash on delivery (Abuja only)\n• Mobile money (Opay, Palmpay)\n\n**What I Need:**\n✅ Type of suya\n✅ Quantity\n✅ Spice level\n✅ Delivery address (or 'pickup')\n✅ Your phone number\n✅ Preferred time\n\n**Ready to order?** Send me your order! 🚀",
+    "category": "order"
+  },
+  {
+    "keywords": ["delivery", "shipping", "when", "time", "how long", "dispatch", "send", "do you deliver", "abuja", "wuse", "garki", "maitama"],
+    "answer": "🚚 **Delivery Information**\n\n**Delivery Areas:**\n• **Wuse 2**: Yes, 30-45 minutes\n• **Garki**: Yes, 45-60 minutes\n• **Maitama**: Yes, 45-60 minutes\n• **Other Abuja Areas**: Contact us to check\n\n**Delivery Times:**\n• **Lunch**: 12pm - 3pm (order by 11:30am)\n• **Dinner**: 6pm - 9pm (order by 5:30pm)\n• **Express**: 20-30 minutes (+₦500)\n\n**Delivery Fees:**\n• Wuse 2, Garki, Maitama: ₦500 (Free for orders above ₦5,000)\n• Other Abuja areas: ₦1,000\n• Express delivery: +₦500\n\n**Free Delivery:**\n✅ Orders above ₦5,000\n\n**Minimum Order:**\n₦2,000 for delivery\n\n**Tracking:**\nWe'll send you updates:\n• Order confirmed\n• Being prepared\n• Out for delivery (with rider contact)\n• Delivered\n\n**Pickup Available:**\nYes! Order ahead and pick up. No delivery fee!\n\n**Fresh Guarantee:**\nAll suya is prepared fresh when you order!\n\nNeed faster delivery? Ask about express options! ⚡",
+    "category": "delivery"
+  },
+  {
+    "keywords": ["payment", "pay", "how to pay", "payment method", "bank transfer", "cash", "card"],
+    "answer": "💳 **Payment Methods**\n\nWe accept:\n\n**1. Bank Transfer**\n• Send us your bank details when ordering\n• We'll provide account details\n\n**2. Cash on Delivery**\n• Available in Abuja\n• Additional ₦200 handling fee\n• Pay when suya is delivered\n\n**3. Mobile Money**\n• Opay\n• Palmpay\n• Kuda\n• Other mobile money apps\n\n**Payment Confirmation:**\nAfter payment, send us:\n• Screenshot of transfer\n• Your order number\n• We'll confirm within 30 minutes\n\n**Security:**\n✅ All payments are secure\n✅ We never ask for OTP or PIN\n\nNeed payment details? Just ask! 🔒",
+    "category": "payment"
+  },
+  {
+    "keywords": ["ram suya", "specialty", "special", "best", "recommend"],
+    "answer": "🍢 **Ram Suya - Our Specialty!**\n\n**Why Ram Suya?**\n• Premium quality meat\n• Tender and flavorful\n• Our most popular item!\n• ₦800 per stick\n\n**What Makes It Special:**\n✅ Premium ram meat\n✅ Special spice blend\n✅ Slow-grilled to perfection\n✅ Juicy and tender\n\n**Customer Favorite:**\nMost customers order ram suya - it's our bestseller!\n\n**Try It:**\nOrder 5 sticks or more and get a discount!\n\n**Spice Levels:**\n• Mild - Perfect for first-timers\n• Medium - Balanced spice\n• Hot - For spice lovers! 🔥\n\n**Combo:**\nRam Suya + Drink + Sides = Perfect meal!\n\nWant to try our specialty? Order now! 🍢✨",
+    "category": "menu"
+  },
+  {
+    "keywords": ["spicy", "spice", "hot", "pepper", "mild", "medium"],
+    "answer": "🌶️ **Spice Levels**\n\n**Mild:**\n• Not too spicy\n• Perfect for kids and those who don't like heat\n• Still flavorful!\n\n**Medium:**\n• Moderate spice\n• Balanced flavor\n• Most popular choice\n\n**Hot:**\n• Very spicy 🔥\n• For spice lovers\n• Our specialty blend\n• Not for the faint-hearted!\n\n**Custom Spice:**\nTell us your preference and we'll adjust!\n\n**Spicy Pepper Sauce:**\nWe also have extra spicy pepper sauce (+₦200)\n\n**First Time?**\nWe recommend starting with mild or medium, then trying hot next time!\n\n**Note:**\nAll our suya is freshly spiced when you order, so it's always perfect!\n\nWhat spice level would you like? 🌶️",
+    "category": "menu"
+  },
+  {
+    "keywords": ["instagram", "ig", "social media", "page", "follow", "harzkane"],
+    "answer": "📱 **Follow Us on Instagram**\n\n**Instagram:**\n@harzkane\n\n**What's on Our Instagram:**\n• Daily suya photos\n• Special offers\n• Customer reviews\n• Behind-the-scenes\n• Cooking videos\n• New menu items\n\n**Stories:**\n• Today's specials (updated daily)\n• Flash sales\n• Fresh suya ready\n• Customer photos\n\n**DM Us:**\nYou can also order via Instagram DM!\n\n**Follow us for:**\n✅ Daily specials\n✅ Exclusive deals\n✅ Fresh suya updates\n✅ New flavors\n\nFollow us now: @harzkane 🍢✨",
+    "category": "social"
+  },
+  {
+    "keywords": ["event", "party", "bulk order", "large order", "catering"],
+    "answer": "🎉 **Bulk Orders & Events**\n\n**We Cater For:**\n• Birthday parties\n• Corporate events\n• Family gatherings\n• Any celebration!\n\n**Bulk Order Pricing:**\n• **50-100 sticks**: 10% discount\n• **100+ sticks**: 15% discount\n• **200+ sticks**: 20% discount + free delivery\n\n**What's Included:**\n✅ Fresh suya (prepared on order)\n✅ Sides (onions, cabbage, tomatoes)\n✅ Spicy pepper sauce\n✅ Serving setup (optional)\n\n**To Book:**\nSend us:\n• Event date\n• Number of people\n• Location\n• Types of suya preferred\n• Budget\n\n**Contact:**\n• WhatsApp: +234 810 706 0160\n• Email: harzkane@gmail.com\n\n**Booking:**\nBook at least 2 days in advance for best availability.\n\nNeed suya for an event? Contact us now! 🍢🎉",
+    "category": "catering"
+  },
+  {
+    "keywords": ["fresh", "freshly", "made", "prepare", "when"],
+    "answer": "🔥 **Fresh Suya Guarantee**\n\n**All suya is prepared fresh when you order!**\n\n**Our Process:**\n1. You place order\n2. We prepare fresh (15-20 minutes)\n3. Spice it up\n4. Grill to perfection\n5. Deliver hot and fresh!\n\n**No Pre-Made:**\n✅ We never pre-make suya\n✅ Always fresh when you order\n✅ Hot when delivered\n\n**Quality:**\n• Premium meat\n• Fresh spices\n• Perfectly grilled\n• Served hot\n\n**Timing:**\n• Preparation: 15-20 minutes\n• Delivery: 30-60 minutes (depending on location)\n• Total: 45-80 minutes from order to delivery\n\n**Express Option:**\nNeed it faster? Ask about express delivery!\n\n**That's why we're the best!** 🔥✨",
+    "category": "quality"
+  },
+  {
+    "keywords": ["thanks", "thank you", "appreciate", "grateful"],
+    "answer": "You're very welcome! 😊\n\nWe're happy to serve you the best suya in Abuja! Is there anything else you need?\n\n💡 **Tip:** Save this number (+234 810 706 0160) to order anytime!\n\n**Follow us:**\nInstagram: @harzkane\n\nHave a great day! 🌟",
+    "category": "greeting"
+  }
+]

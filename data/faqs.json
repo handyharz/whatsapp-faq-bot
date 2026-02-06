@@ -1,0 +1,112 @@
+[
+  {
+    "keywords": ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "greetings", "howdy"],
+    "answer": "Hello! 👋 Welcome to our business! How can I help you today?\n\nSend 'HELP' to see what I can assist you with. 😊",
+    "category": "greeting"
+  },
+  {
+    "keywords": ["help", "commands", "options", "menu", "what can you do", "assist", "support"],
+    "answer": "I can help you with:\n\n📋 **Information**\n• PRICE - Get pricing information\n• HOURS - Business hours\n• LOCATION - Our address\n• CONTACT - Contact information\n\n🛒 **Services**\n• ORDER - How to place an order\n• DELIVERY - Delivery information\n• PAYMENT - Payment methods\n• TRACK - Track your order\n\n❓ **Other**\n• RETURNS - Return policy\n• WARRANTY - Warranty information\n• FAQ - Frequently asked questions\n\nJust ask me anything! 😊",
+    "category": "help"
+  },
+  {
+    "keywords": ["price", "cost", "how much", "pricing", "fee", "charges", "rate", "amount", "naira", "₦"],
+    "answer": "💰 **Pricing Information**\n\nOur prices vary by product/service. Here are some examples:\n\n• Basic Package: From ₦5,000\n• Standard Package: From ₦15,000\n• Premium Package: From ₦30,000\n\nFor specific pricing:\n• Send the product/service name\n• Or call us: +234 XXX XXX XXXX\n• Or visit our website: [Your Website]\n\n💡 **Special Offers**\n• 10% discount for first-time customers\n• Free delivery for orders above ₦10,000\n\nNeed a custom quote? Just ask!",
+    "category": "pricing"
+  },
+  {
+    "keywords": ["hours", "open", "closed", "when", "time", "business hours", "available", "operating hours"],
+    "answer": "🕐 **Business Hours**\n\n**Monday - Friday**: 9:00 AM - 5:00 PM WAT\n**Saturday**: 10:00 AM - 2:00 PM WAT\n**Sunday**: Closed\n\n**Public Holidays**: Closed\n\n📞 **Emergency Contact**\nFor urgent matters outside business hours, call: +234 XXX XXX XXXX\n\nWe're here to serve you! 😊",
+    "category": "hours"
+  },
+  {
+    "keywords": ["location", "address", "where", "place", "office", "shop", "store", "find us", "directions"],
+    "answer": "📍 **Our Location**\n\n**Address:**\n[Your Business Name]\n[Street Address]\n[City, State]\nNigeria\n\n**Landmarks:**\n• Near [Landmark 1]\n• Opposite [Landmark 2]\n\n🗺️ **Directions**\n• Google Maps: [Google Maps Link]\n• Waze: Search '[Business Name]'\n\n🚗 **Parking:** Available\n🚌 **Public Transport:** [Bus/Route Info]\n\nNeed directions? Just ask!",
+    "category": "location"
+  },
+  {
+    "keywords": ["contact", "phone", "email", "reach", "call", "number", "whatsapp", "get in touch"],
+    "answer": "📞 **Contact Us**\n\n**Phone:**\n+234 XXX XXX XXXX (Main)\n+234 XXX XXX XXXX (Sales)\n\n**WhatsApp:**\nThis number (you're already here!)\n\n**Email:**\ninfo@yourbusiness.com\nsales@yourbusiness.com\nsupport@yourbusiness.com\n\n**Social Media:**\n• Instagram: @yourbusiness\n• Facebook: /yourbusiness\n• Twitter: @yourbusiness\n\n**Response Time:**\n• WhatsApp: Within 5 minutes (business hours)\n• Email: Within 24 hours\n• Phone: Immediate (business hours)\n\nWe're here to help! 😊",
+    "category": "contact"
+  },
+  {
+    "keywords": ["order", "buy", "purchase", "shop", "place order", "how to order", "buy now"],
+    "answer": "🛒 **How to Place an Order**\n\n**Option 1: Via WhatsApp**\n1. Send us:\n   • Product/service name\n   • Quantity\n   • Your delivery address\n   • Preferred delivery date\n\n2. We'll confirm availability & price\n3. Make payment\n4. Receive confirmation\n\n**Option 2: Call Us**\n+234 XXX XXX XXXX\n\n**Option 3: Visit Our Store**\n[Address]\n\n**What We Need:**\n✅ Product/service details\n✅ Quantity\n✅ Delivery address\n✅ Contact number\n✅ Preferred delivery date\n\n**Payment Methods:**\n• Bank transfer\n• Cash on delivery (Lagos only)\n• Mobile money\n\nReady to order? Send us the details! 🚀",
+    "category": "order"
+  },
+  {
+    "keywords": ["delivery", "shipping", "when", "time", "how long", "dispatch", "send", "transport"],
+    "answer": "🚚 **Delivery Information**\n\n**Delivery Times:**\n• **Lagos**: 2-3 business days\n• **Abuja**: 3-4 business days\n• **Port Harcourt**: 3-4 business days\n• **Other States**: 3-5 business days\n\n**Delivery Fees:**\n• Lagos: ₦500 (Free for orders above ₦10,000)\n• Other States: ₦1,500-₦3,000\n• Express Delivery: +₦2,000 (1-2 days)\n\n**Free Delivery:**\n✅ Orders above ₦10,000 (Lagos)\n✅ Orders above ₦20,000 (Other states)\n\n**Tracking:**\nOnce dispatched, we'll send you a tracking number.\n\n**Delivery Hours:**\nMonday - Saturday, 9am - 6pm\n\nNeed faster delivery? Ask about express options! ⚡",
+    "category": "delivery"
+  },
+  {
+    "keywords": ["payment", "pay", "how to pay", "payment method", "bank transfer", "cash", "card", "paystack", "flutterwave"],
+    "answer": "💳 **Payment Methods**\n\nWe accept:\n\n**1. Bank Transfer**\n• Account Name: [Business Name]\n• Bank: [Bank Name]\n• Account Number: [Account Number]\n\n**2. Cash on Delivery**\n• Available in Lagos only\n• Additional ₦500 handling fee\n\n**3. Mobile Money**\n• Opay, Palmpay, Kuda, etc.\n\n**4. Online Payment**\n• Paystack (Card, Bank transfer)\n• Flutterwave\n\n**Payment Confirmation:**\nAfter payment, send us:\n• Screenshot of transfer\n• Your order number\n• We'll confirm within 1 hour\n\n**Security:**\n✅ All payments are secure\n✅ We never ask for OTP or PIN\n\nNeed payment details? Just ask! 🔒",
+    "category": "payment"
+  },
+  {
+    "keywords": ["track", "tracking", "where is my order", "order status", "status", "my order"],
+    "answer": "📦 **Track Your Order**\n\nTo track your order, send us:\n• Your order number (e.g., ORD-12345)\n• Or your phone number used for order\n\n**Order Status:**\n\n🟡 **Pending** - Order received, processing\n🟢 **Confirmed** - Payment confirmed, preparing\n🔵 **Dispatched** - On the way to you\n✅ **Delivered** - Received by you\n\n**Tracking Updates:**\nWe'll notify you at each stage:\n• Order confirmation\n• Payment confirmation\n• Dispatch notification\n• Delivery confirmation\n\n**Need Help?**\nIf you haven't received updates, send your order number and we'll check immediately!\n\nDon't have your order number? Send your phone number and we'll find it! 🔍",
+    "category": "tracking"
+  },
+  {
+    "keywords": ["return", "returns", "refund", "exchange", "replace", "wrong item", "defective", "broken"],
+    "answer": "↩️ **Return & Refund Policy**\n\n**Return Period:**\n• 7 days from delivery date\n• Item must be unused and in original packaging\n\n**Eligible for Return:**\n✅ Defective items\n✅ Wrong item received\n✅ Damaged during delivery\n✅ Not as described\n\n**Not Eligible:**\n❌ Used items\n❌ Items without original packaging\n❌ Customized items\n❌ Perishable goods\n\n**Return Process:**\n1. Contact us within 7 days\n2. Send photos of item\n3. We'll approve return\n4. Arrange pickup or drop-off\n5. Refund processed within 5-7 business days\n\n**Refund Method:**\n• Same as payment method\n• Bank transfer: 3-5 business days\n\n**Exchange:**\nAvailable for wrong size/color (subject to availability)\n\nNeed to return something? Contact us now! 📞",
+    "category": "returns"
+  },
+  {
+    "keywords": ["warranty", "guarantee", "guaranteed", "cover", "repair", "service"],
+    "answer": "🛡️ **Warranty Information**\n\n**Warranty Period:**\n• Electronics: 12 months\n• Appliances: 6 months\n• Other products: 3 months\n\n**What's Covered:**\n✅ Manufacturing defects\n✅ Faulty components\n✅ Performance issues\n\n**What's Not Covered:**\n❌ Physical damage\n❌ Water damage\n❌ Unauthorized repairs\n❌ Normal wear and tear\n\n**Warranty Claim:**\n1. Contact us with:\n   • Order number\n   • Photos of issue\n   • Description of problem\n\n2. We'll assess within 24 hours\n3. If approved, we'll:\n   • Repair the item\n   • Replace the item\n   • Refund (if repair/replace not possible)\n\n**Service Centers:**\n[Address of service center]\n\nHave a warranty claim? Contact us! 🔧",
+    "category": "warranty"
+  },
+  {
+    "keywords": ["discount", "promo", "promotion", "offer", "sale", "cheap", "affordable", "deal"],
+    "answer": "🎉 **Current Offers & Promotions**\n\n**New Customer Discount:**\n• 10% off first order\n• Use code: WELCOME10\n\n**Bulk Discount:**\n• 5% off orders above ₦50,000\n• 10% off orders above ₦100,000\n\n**Free Delivery:**\n• Orders above ₦10,000 (Lagos)\n• Orders above ₦20,000 (Other states)\n\n**Seasonal Sales:**\n• Check our social media for latest deals\n• Subscribe to get notified of sales\n\n**Referral Program:**\n• Refer a friend, get ₦1,000 credit\n• Your friend gets 10% off first order\n\n**Loyalty Points:**\n• Earn points on every purchase\n• Redeem for discounts\n\nWant to know about upcoming sales? Follow us on social media! 📱",
+    "category": "promotions"
+  },
+  {
+    "keywords": ["catalog", "products", "items", "what do you sell", "services", "what you have", "list"],
+    "answer": "📋 **Our Products & Services**\n\n**Categories:**\n\n1. **Category 1**\n   • Product A - ₦X,XXX\n   • Product B - ₦X,XXX\n\n2. **Category 2**\n   • Service A\n   • Service B\n\n3. **Category 3**\n   • Product C\n   • Product D\n\n**Full Catalog:**\n• Website: [Your Website]\n• Instagram: @yourbusiness\n• Send 'CATALOG [category]' for specific category\n\n**Custom Orders:**\nWe also accept custom orders! Tell us what you need.\n\n**New Arrivals:**\nCheck our social media for latest products!\n\nWant to see a specific category? Just ask! 🛍️",
+    "category": "products"
+  },
+  {
+    "keywords": ["account", "my account", "profile", "login", "sign up", "register"],
+    "answer": "👤 **Account Information**\n\n**Create Account:**\n• Visit our website: [Website]\n• Or place an order and we'll create one for you\n\n**Account Benefits:**\n✅ Order history\n✅ Faster checkout\n✅ Loyalty points\n✅ Exclusive deals\n✅ Order tracking\n\n**Account Features:**\n• View past orders\n• Track current orders\n• Update delivery address\n• Manage payment methods\n• View loyalty points\n\n**Forgot Password?**\nSend 'RESET PASSWORD' with your email/phone\n\n**Need Help?**\nContact support: support@yourbusiness.com\n\nWant to create an account? Visit our website or place an order! 🚀",
+    "category": "account"
+  },
+  {
+    "keywords": ["complaint", "problem", "issue", "bad", "wrong", "dissatisfied", "unhappy"],
+    "answer": "😔 **We're Sorry to Hear That**\n\nWe take complaints seriously and want to make it right!\n\n**How to Complain:**\n1. Send us:\n   • Order number (if applicable)\n   • Description of issue\n   • Photos (if relevant)\n\n2. We'll respond within 2 hours\n3. We'll work to resolve it within 24 hours\n\n**Complaint Channels:**\n• WhatsApp: This number\n• Email: complaints@yourbusiness.com\n• Phone: +234 XXX XXX XXXX\n• In-person: [Address]\n\n**Our Commitment:**\n✅ Quick response\n✅ Fair resolution\n✅ Customer satisfaction\n\n**Escalation:**\nIf not satisfied, contact:\n• Manager: manager@yourbusiness.com\n• Owner: owner@yourbusiness.com\n\nWe're here to help! Please tell us what happened. 🙏",
+    "category": "complaints"
+  },
+  {
+    "keywords": ["thanks", "thank you", "appreciate", "grateful", "bless"],
+    "answer": "You're very welcome! 😊\n\nWe're happy to help! Is there anything else you need?\n\n💡 **Tip:** Save this number to get quick help anytime!\n\nHave a great day! 🌟",
+    "category": "greeting"
+  },
+  {
+    "keywords": ["bye", "goodbye", "see you", "later", "farewell"],
+    "answer": "Goodbye! 👋\n\nThanks for contacting us. We're here whenever you need us!\n\nHave a wonderful day! 😊",
+    "category": "greeting"
+  },
+  {
+    "keywords": ["faq", "frequently asked", "questions", "common questions"],
+    "answer": "❓ **Frequently Asked Questions**\n\n**Popular Questions:**\n\n1. **How do I place an order?**\n   Send 'ORDER' for instructions\n\n2. **What are your prices?**\n   Send 'PRICE' for pricing info\n\n3. **Do you deliver?**\n   Send 'DELIVERY' for delivery info\n\n4. **How do I pay?**\n   Send 'PAYMENT' for payment methods\n\n5. **Can I track my order?**\n   Send 'TRACK' for tracking info\n\n6. **What's your return policy?**\n   Send 'RETURNS' for return policy\n\n**Quick Commands:**\n• HELP - See all commands\n• PRICE - Pricing information\n• HOURS - Business hours\n• LOCATION - Our address\n• CONTACT - Contact information\n\nNeed help with something else? Just ask! 😊",
+    "category": "help"
+  },
+  {
+    "keywords": ["website", "site", "online", "web", "url", "link"],
+    "answer": "🌐 **Our Website**\n\n**Website:**\n[Your Website URL]\n\n**What's on Our Website:**\n• Full product catalog\n• Online ordering\n• Account management\n• Order tracking\n• Blog & updates\n• Customer reviews\n\n**Social Media:**\n• Instagram: @yourbusiness\n• Facebook: /yourbusiness\n• Twitter: @yourbusiness\n\nVisit us online or chat with us here on WhatsApp! 📱",
+    "category": "contact"
+  },
+  {
+    "keywords": ["review", "rating", "feedback", "testimonial", "experience"],
+    "answer": "⭐ **We'd Love Your Feedback!**\n\n**How to Leave a Review:**\n\n1. **Google Reviews:**\n   [Google Reviews Link]\n\n2. **Facebook:**\n   [Facebook Page]\n\n3. **Instagram:**\n   Tag us: @yourbusiness\n\n4. **WhatsApp:**\n   Just send us your feedback here!\n\n**Your Feedback Helps Us:**\n✅ Improve our service\n✅ Serve you better\n✅ Help other customers\n\n**Thank You!**\nWe appreciate every review, good or bad. It helps us grow! 🙏\n\nHave feedback? We'd love to hear it! 😊",
+    "category": "feedback"
+  },
+  {
+    "keywords": ["partnership", "collaborate", "work together", "business opportunity", "wholesale"],
+    "answer": "🤝 **Partnership Opportunities**\n\nWe're always open to partnerships!\n\n**Partnership Types:**\n• Wholesale/Bulk orders\n• Reseller partnerships\n• Corporate partnerships\n• Collaboration opportunities\n\n**Benefits:**\n✅ Special pricing\n✅ Priority support\n✅ Custom solutions\n✅ Marketing support\n\n**Interested?**\nContact our partnerships team:\n• Email: partnerships@yourbusiness.com\n• Phone: +234 XXX XXX XXXX\n• WhatsApp: This number (send 'PARTNERSHIP')\n\n**Requirements:**\n• Business registration\n• Tax identification\n• Minimum order quantities\n\nLet's grow together! 🚀",
+    "category": "business"
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "keywords": ["hello", "hi", "hey", "good morning", "good afternoon", "good evening"],
+    "answer": "Hello! 👋 Welcome to [Business Name]! We're a fashion store in Nigeria. How can I help you today?\n\nSend 'HELP' to see what I can assist you with. 😊",
+    "category": "greeting"
+  },
+  {
+    "keywords": ["help", "commands", "options", "menu", "what can you do"],
+    "answer": "I can help you with:\n\n👗 **Shopping**\n• SIZES - Available sizes\n• COLORS - Available colors\n• STOCK - Check if item is in stock\n• PRICE - Pricing information\n\n🚚 **Delivery**\n• DELIVERY - Delivery information\n• TRACK - Track your order\n\n↩️ **Returns**\n• RETURN - Return/exchange policy\n• EXCHANGE - How to exchange items\n\nJust ask me anything! 😊",
+    "category": "help"
+  },
+  {
+    "keywords": ["price", "cost", "how much", "pricing", "fee", "charges", "naira", "₦"],
+    "answer": "💰 **Our Prices**\n\n**Clothing:**\n• Tops: From ₦3,000\n• Dresses: From ₦5,000\n• Jeans/Trousers: From ₦4,000\n• Shoes: From ₦8,000\n\n**Accessories:**\n• Bags: From ₦2,000\n• Jewelry: From ₦1,500\n\n**Special Offers:**\n• 10% off first order (use code: WELCOME10)\n• Buy 2 get 1 free on selected items\n• Free delivery for orders above ₦10,000\n\nFor specific item prices, send me the item name or check our Instagram: @[yourbusiness]\n\nNeed a custom quote? Just ask! 💬",
+    "category": "pricing"
+  },
+  {
+    "keywords": ["size", "sizes", "what size", "available sizes", "do you have size", "small", "medium", "large", "xl", "xxl"],
+    "answer": "📏 **Available Sizes**\n\nWe stock:\n• **XS** (Extra Small)\n• **S** (Small)\n• **M** (Medium)\n• **L** (Large)\n• **XL** (Extra Large)\n• **XXL** (2X Large) - Limited stock\n\n**Size Guide:**\n• XS: UK 6-8\n• S: UK 8-10\n• M: UK 10-12\n• L: UK 12-14\n• XL: UK 14-16\n• XXL: UK 16-18\n\n**Not sure your size?**\nSend me:\n• Your measurements (bust, waist, hips)\n• Or the item name\n\nI'll help you find the perfect fit! 👗\n\n**Note:** Sizes may vary by brand. Check item description for specific sizing.",
+    "category": "sizes"
+  },
+  {
+    "keywords": ["color", "colors", "colours", "what color", "available colors", "black", "white", "red", "blue", "green"],
+    "answer": "🎨 **Available Colors**\n\nMost items come in:\n• **Black** ⚫\n• **White** ⚪\n• **Navy Blue** 🔵\n• **Red** 🔴\n• **Beige/Cream** 🟤\n• **Gray** ⚪\n\n**Popular Colors:**\n• Black (always in stock)\n• White (always in stock)\n• Navy Blue\n\n**Limited Stock Colors:**\n• Pastel colors (pink, mint, lavender)\n• Bright colors (yellow, orange)\n\n**To Check Specific Item:**\nSend me the item name and I'll tell you available colors!\n\n**Can't find your color?**\nWe can check if we can order it for you. Just ask! 💬",
+    "category": "colors"
+  },
+  {
+    "keywords": ["stock", "available", "in stock", "do you have", "is it available", "out of stock"],
+    "answer": "📦 **Stock Availability**\n\n**To Check Stock:**\nSend me:\n• Item name\n• Size\n• Color\n\nI'll check if it's available!\n\n**Quick Stock Status:**\n• ✅ **In Stock** - Available now\n• ⚠️ **Low Stock** - Only a few left\n• ❌ **Out of Stock** - Not available (but we can pre-order)\n\n**Pre-Orders:**\nIf an item is out of stock, we can:\n• Pre-order for you (2-3 weeks)\n• Notify you when it's back\n\n**New Arrivals:**\nCheck our Instagram @[yourbusiness] for latest arrivals!\n\nSend me the item details and I'll check stock for you! 🔍",
+    "category": "stock"
+  },
+  {
+    "keywords": ["hours", "open", "closed", "when", "time", "business hours"],
+    "answer": "🕐 **Business Hours**\n\n**Monday - Friday**: 9:00 AM - 6:00 PM WAT\n**Saturday**: 10:00 AM - 4:00 PM WAT\n**Sunday**: Closed\n\n**Public Holidays**: Closed\n\n**Online Orders:**\nAvailable 24/7 via WhatsApp!\n\n**Response Time:**\n• Business hours: Within 5 minutes\n• After hours: Next business day\n\n**Visit Us:**\n[Your Address]\n\nWe're here to help! 😊",
+    "category": "hours"
+  },
+  {
+    "keywords": ["location", "address", "where", "place", "shop", "store", "find us"],
+    "answer": "📍 **Our Location**\n\n**Address:**\n[Your Business Name]\n[Street Address]\n[City, State]\nNigeria\n\n**Landmarks:**\n• Near [Landmark 1]\n• Opposite [Landmark 2]\n\n**Directions:**\n• Google Maps: [Google Maps Link]\n• Waze: Search '[Business Name]'\n\n**Parking:** Available\n**Public Transport:** [Bus/Route Info]\n\n**Visit Us:**\nMonday-Friday: 9am-6pm\nSaturday: 10am-4pm\n\nNeed directions? Just ask! 🗺️",
+    "category": "location"
+  },
+  {
+    "keywords": ["contact", "phone", "email", "reach", "call", "number", "whatsapp"],
+    "answer": "📞 **Contact Us**\n\n**Phone:**\n+234 XXX XXX XXXX (Main)\n+234 XXX XXX XXXX (Sales)\n\n**WhatsApp:**\nThis number (you're already here!)\n\n**Email:**\ninfo@yourbusiness.com\nsales@yourbusiness.com\n\n**Social Media:**\n• Instagram: @[yourbusiness]\n• Facebook: /[yourbusiness]\n• TikTok: @[yourbusiness]\n\n**Response Time:**\n• WhatsApp: Within 5 minutes (business hours)\n• Email: Within 24 hours\n• Phone: Immediate (business hours)\n\nWe're here to help! 😊",
+    "category": "contact"
+  },
+  {
+    "keywords": ["order", "buy", "purchase", "shop", "place order", "how to order", "i want to buy"],
+    "answer": "🛒 **How to Place an Order**\n\n**Via WhatsApp (Easiest!):**\n\n1. Send me:\n   • Item name\n   • Size\n   • Color\n   • Quantity\n   • Your delivery address\n\n2. I'll confirm:\n   • Price\n   • Availability\n   • Delivery time\n\n3. Make payment\n4. Receive confirmation\n\n**Payment Methods:**\n• Bank transfer\n• Cash on delivery (Lagos only)\n• Mobile money (Opay, Palmpay)\n\n**What I Need:**\n✅ Item name\n✅ Size\n✅ Color\n✅ Quantity\n✅ Delivery address\n✅ Your phone number\n\n**Ready to order?** Send me the details! 🚀",
+    "category": "order"
+  },
+  {
+    "keywords": ["delivery", "shipping", "when", "time", "how long", "dispatch", "send"],
+    "answer": "🚚 **Delivery Information**\n\n**Delivery Times:**\n• **Lagos (Mainland)**: 1-2 business days\n• **Lagos (Island)**: 2-3 business days\n• **Abuja**: 3-4 business days\n• **Port Harcourt**: 3-4 business days\n• **Other States**: 3-5 business days\n\n**Delivery Fees:**\n• Lagos Mainland: ₦500 (Free for orders above ₦10,000)\n• Lagos Island: ₦1,000 (Free for orders above ₦15,000)\n• Other States: ₦1,500-₦3,000\n• Express Delivery: +₦2,000 (1-2 days)\n\n**Free Delivery:**\n✅ Orders above ₦10,000 (Lagos Mainland)\n✅ Orders above ₦15,000 (Lagos Island)\n✅ Orders above ₦20,000 (Other states)\n\n**Tracking:**\nOnce dispatched, we'll send you a tracking number via WhatsApp.\n\n**Delivery Hours:**\nMonday - Saturday, 9am - 6pm\n\nNeed faster delivery? Ask about express options! ⚡",
+    "category": "delivery"
+  },
+  {
+    "keywords": ["payment", "pay", "how to pay", "payment method", "bank transfer", "cash", "card"],
+    "answer": "💳 **Payment Methods**\n\nWe accept:\n\n**1. Bank Transfer**\n• Account Name: [Business Name]\n• Bank: [Bank Name]\n• Account Number: [Account Number]\n\n**2. Cash on Delivery**\n• Available in Lagos only\n• Additional ₦500 handling fee\n• Pay when item is delivered\n\n**3. Mobile Money**\n• Opay\n• Palmpay\n• Kuda\n• Other mobile money apps\n\n**4. Online Payment**\n• Paystack (Card, Bank transfer)\n• Flutterwave\n\n**Payment Confirmation:**\nAfter payment, send us:\n• Screenshot of transfer\n• Your order number\n• We'll confirm within 1 hour\n\n**Security:**\n✅ All payments are secure\n✅ We never ask for OTP or PIN\n\nNeed payment details? Just ask! 🔒",
+    "category": "payment"
+  },
+  {
+    "keywords": ["return", "returns", "refund", "exchange", "replace", "wrong size", "doesn't fit", "defective", "broken"],
+    "answer": "↩️ **Return & Exchange Policy**\n\n**Return Period:**\n• 7 days from delivery date\n• Item must be unused and in original packaging\n• Tags must still be attached\n\n**Eligible for Return/Exchange:**\n✅ Wrong size (exchange for correct size)\n✅ Wrong color (exchange for correct color)\n✅ Defective items\n✅ Wrong item received\n✅ Not as described\n\n**Not Eligible:**\n❌ Used items\n❌ Items without original packaging\n❌ Items without tags\n❌ Customized items\n❌ Sale items (final sale)\n\n**Return Process:**\n1. Contact us within 7 days\n2. Send photos of item\n3. We'll approve return/exchange\n4. Arrange pickup or drop-off\n5. Refund/exchange processed within 5-7 business days\n\n**Exchange:**\nAvailable for wrong size/color (subject to availability)\n\n**Refund Method:**\n• Same as payment method\n• Bank transfer: 3-5 business days\n\nNeed to return/exchange something? Contact us now! 📞",
+    "category": "returns"
+  },
+  {
+    "keywords": ["track", "tracking", "where is my order", "order status", "status", "my order"],
+    "answer": "📦 **Track Your Order**\n\n**To Track Your Order:**\nSend me:\n• Your order number (e.g., ORD-12345)\n• Or your phone number used for order\n\n**Order Status:**\n\n🟡 **Pending** - Order received, processing\n🟢 **Confirmed** - Payment confirmed, preparing\n🔵 **Dispatched** - On the way to you (tracking number sent)\n✅ **Delivered** - Received by you\n\n**Tracking Updates:**\nWe'll notify you at each stage:\n• Order confirmation\n• Payment confirmation\n• Dispatch notification (with tracking number)\n• Delivery confirmation\n\n**Need Help?**\nIf you haven't received updates, send your order number and we'll check immediately!\n\n**Don't have your order number?**\nSend your phone number and we'll find it! 🔍",
+    "category": "tracking"
+  },
+  {
+    "keywords": ["catalog", "products", "items", "what do you sell", "what you have", "list", "collection"],
+    "answer": "📋 **Our Fashion Collection**\n\n**Categories:**\n\n1. **Women's Clothing**\n   • Dresses (Casual, Formal, Party)\n   • Tops & Blouses\n   • Skirts & Shorts\n   • Jeans & Trousers\n   • Jumpsuits & Rompers\n\n2. **Men's Clothing**\n   • Shirts & Polos\n   • Trousers & Jeans\n   • T-Shirts\n   • Shorts\n\n3. **Shoes**\n   • Heels\n   • Flats\n   • Sneakers\n   • Sandals\n\n4. **Accessories**\n   • Bags & Handbags\n   • Jewelry\n   • Belts\n   • Sunglasses\n\n**Full Catalog:**\n• Instagram: @[yourbusiness] (updated daily!)\n• Website: [Your Website]\n• Send 'CATALOG [category]' for specific category\n\n**New Arrivals:**\nCheck our Instagram stories for latest arrivals!\n\n**Custom Orders:**\nWe also accept custom orders! Tell us what you need.\n\nWant to see a specific category? Just ask! 🛍️",
+    "category": "products"
+  },
+  {
+    "keywords": ["discount", "promo", "promotion", "offer", "sale", "cheap", "affordable", "deal"],
+    "answer": "🎉 **Current Offers & Promotions**\n\n**New Customer Discount:**\n• 10% off first order\n• Use code: WELCOME10\n\n**Bulk Discount:**\n• 5% off orders above ₦50,000\n• 10% off orders above ₦100,000\n\n**Free Delivery:**\n• Orders above ₦10,000 (Lagos Mainland)\n• Orders above ₦15,000 (Lagos Island)\n• Orders above ₦20,000 (Other states)\n\n**Seasonal Sales:**\n• Check our Instagram for latest deals\n• Subscribe to get notified of sales\n• Flash sales announced on WhatsApp status\n\n**Referral Program:**\n• Refer a friend, get ₦1,000 credit\n• Your friend gets 10% off first order\n\n**Loyalty Points:**\n• Earn points on every purchase\n• Redeem for discounts\n\n**Sale Items:**\n• Up to 50% off selected items\n• Check Instagram for sale items\n\nWant to know about upcoming sales? Follow us on Instagram! 📱",
+    "category": "promotions"
+  },
+  {
+    "keywords": ["instagram", "ig", "social media", "page", "follow"],
+    "answer": "📱 **Follow Us on Instagram**\n\n**Instagram:**\n@[yourbusiness]\n\n**What's on Our Instagram:**\n• Latest fashion arrivals\n• Outfit inspiration\n• Style tips\n• Sale announcements\n• Customer reviews\n• Behind-the-scenes\n\n**Stories:**\n• New arrivals (updated daily)\n• Flash sales\n• Style tips\n• Customer photos\n\n**DM Us:**\nYou can also order via Instagram DM!\n\n**Follow us for:**\n✅ Latest fashion trends\n✅ Exclusive deals\n✅ Style inspiration\n✅ New arrivals\n\nFollow us now: @[yourbusiness] 👗✨",
+    "category": "social"
+  },
+  {
+    "keywords": ["thanks", "thank you", "appreciate", "grateful"],
+    "answer": "You're very welcome! 😊\n\nWe're happy to help! Is there anything else you need?\n\n💡 **Tip:** Save this number to get quick help anytime!\n\n**Follow us:**\nInstagram: @[yourbusiness]\n\nHave a great day! 🌟",
+    "category": "greeting"
+  }
+]
