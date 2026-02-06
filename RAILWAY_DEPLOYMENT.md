@@ -46,40 +46,55 @@ whatsapp-faq-bot/
 
 ### 2.2 Configure Build Settings
 
-Railway should auto-detect, but verify:
+Railway should auto-detect Node.js, but we need to ensure Node 20+ is used:
 
-**Build Command**: (usually auto-detected)
+**Important**: The bot requires Node 20+ (Baileys dependency). Railway will use the `nixpacks.toml` file to configure this.
+
+**Build Command**: (auto-detected from `nixpacks.toml`)
 ```bash
-npm install
+npm install --legacy-peer-deps
 ```
 
-**Start Command**: (set this in Railway settings)
+**Start Command**: (auto-detected from `package.json`)
 ```bash
 npm start
 ```
 
-Or if using `tsx` directly:
-```bash
-npx tsx src/bot.ts
-```
+**Node Version**: Railway will use Node 20 (configured in `nixpacks.toml`)
 
 ### 2.3 Set Environment Variables
 
 In Railway dashboard, go to your service → **Variables** tab and add:
 
 ```env
-# WhatsApp Configuration (optional - will use default if not set)
-WHATSAPP_NUMBER=your_number_here
+# Auth Directory (where WhatsApp session is stored)
+AUTH_DIR=./auth
 
 # FAQ Configuration
-FAQ_FILE_PATH=data/faqs.json
+FAQS_PATH=./data/faqs.json
 
-# Logging (optional)
-LOG_LEVEL=info
+# Business Hours
+BUSINESS_HOURS_START=9
+BUSINESS_HOURS_END=17
+
+# Timezone
+TIMEZONE=Africa/Lagos
+
+# Admin Phone Number (for admin commands)
+ADMIN_NUMBERS=+2348107060160
+
+# After Hours Message
+AFTER_HOURS_MESSAGE=Thanks for your message! We're currently closed (9am-5pm WAT). We'll reply first thing tomorrow. 😊
+
+# Optional: Logging
 NODE_ENV=production
 ```
 
-**Note**: For the first deployment, you might not need all these. Start minimal and add as needed.
+**Important Notes**:
+- `AUTH_DIR=./auth` - WhatsApp session will be stored here (ephemeral on Railway free tier)
+- `ADMIN_NUMBERS` - Use your phone number with country code (e.g., `+2348107060160`)
+- If Railway restarts, you may need to re-scan QR code (auth data is ephemeral on free tier)
+- For persistent auth storage, consider Railway Hobby plan with volumes
 
 ## Step 3: First Deployment
 
