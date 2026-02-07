@@ -117,20 +117,15 @@ export class FAQBot {
 
       const phone = this.formatPhoneNumber(from);
 
-      // Check if this is a platform bot message (sent to admin number)
-      if (this.platformBotNumber && phone.includes(this.platformBotNumber.replace('+', ''))) {
-        // Handle platform bot message
+      // Get client from database first
+      const client = await this.getClient(from);
+      
+      // If no client found, route to platform bot (support/sales)
+      if (!client) {
+        // This is a message from an unknown number - route to platform bot
         const response = await this.platformBot.handleMessage(from, message);
         await this.whatsapp.sendMessage(from, response);
         console.log(chalk.magenta(`🤖 Platform Bot: ${phone} → ${message.substring(0, 50)}...`));
-        return;
-      }
-
-      // Get client from database
-      const client = await this.getClient(from);
-      
-      if (!client) {
-        console.log(chalk.yellow(`⚠️  No client found for ${from}`));
         return;
       }
 
