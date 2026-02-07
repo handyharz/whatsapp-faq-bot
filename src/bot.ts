@@ -1,86 +1,69 @@
 import { SimpleWhatsAppClient } from './whatsapp/simple-client.js';
-import { FAQMatcher, FAQ } from './faq-matcher.js';
+import { FAQMatcher } from './faq-matcher.js';
+import { connectToMongoDB, disconnectFromMongoDB } from './db/mongodb.js';
+import { ClientService, setCacheInvalidationCallback } from './services/client-service.js';
+import { RateLimiter } from './services/rate-limiter.js';
+import { SubscriptionService } from './services/subscription-service.js';
+import { CacheService } from './services/cache-service.js';
+import { MonitoringService } from './services/monitoring-service.js';
+import { PlatformBot } from './platform-bot.js';
+import { Client } from './models/client.js';
 import { config } from './config.js';
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
 import chalk from 'chalk';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export class FAQBot {
   private whatsapp: SimpleWhatsAppClient;
-  private matcher: FAQMatcher;
-  private faqs: FAQ[];
-  private faqsPath: string;
+  private clientService: ClientService;
+  private rateLimiter: RateLimiter;
+  private subscriptionService: SubscriptionService;
+  private cacheService: CacheService;
+  private monitoringService: MonitoringService;
+  private platformBot: PlatformBot;
+  private platformBotNumber: string | null = null;
+  private expiryCheckInterval: NodeJS.Timeout | null = null;
+  private cacheCleanInterval: NodeJS.Timeout | null = null;
+  private monitoringInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     this.whatsapp = new SimpleWhatsAppClient();
-    this.faqsPath = config.faqsPath;
-    this.faqs = this.loadFAQs();
-    this.matcher = new FAQMatcher(this.faqs);
+    this.clientService = new ClientService();
+    this.rateLimiter = new RateLimiter();
+    this.subscriptionService = new SubscriptionService();
+    this.cacheService = new CacheService();
+    this.monitoringService = new MonitoringService(this.cacheService);
+    this.platformBot = new PlatformBot();
+    
+    // Get platform bot number from config (first admin number)
+    this.platformBotNumber = config.adminNumbers.length > 0 ? config.adminNumbers[0] : null;
+
+    // Set up cache invalidation callback
+    setCacheInvalidationCallback((whatsappNumber: string) => {
+      this.cacheService.invalidateClient(whatsappNumber);
+    });
   }
 
-  private loadFAQs(): FAQ[] {
-    try {
-      if (!fs.existsSync(this.faqsPath)) {
-        console.warn(
-          chalk.yellow(`⚠️  FAQ file not found at ${this.faqsPath}`)
-        );
-        console.log(chalk.blue('Creating default FAQ file...'));
-        this.createDefaultFAQs();
-      }
-
-      const data = fs.readFileSync(this.faqsPath, 'utf-8');
-      const faqs = JSON.parse(data) as FAQ[];
-
-      if (!Array.isArray(faqs)) {
-        throw new Error('FAQs must be an array');
-      }
-
-      console.log(chalk.green(`✅ Loaded ${faqs.length} FAQs`));
-      return faqs;
-    } catch (error) {
-      console.error(chalk.red('❌ Error loading FAQs:'), error);
-      console.log(chalk.blue('Using empty FAQ list'));
-      return [];
-    }
-  }
-
-  private createDefaultFAQs(): void {
-    const defaultFAQs: FAQ[] = [
-      {
-        keywords: ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'],
-        answer: 'Hello! 👋 Welcome! How can I help you today?',
-        category: 'greeting',
-      },
-      {
-        keywords: ['help', 'commands', 'options', 'menu', 'what can you do'],
-        answer:
-          "I can help you with:\n" +
-          "• PRICE - Get pricing information\n" +
-          "• HOURS - Business hours\n" +
-          "• LOCATION - Our address\n" +
-          "• CONTACT - Contact information\n" +
-          "• ORDER - How to place an order\n\n" +
-          "Just ask me anything! 😊",
-        category: 'help',
-      },
-    ];
-
-    // Ensure directory exists
-    const dir = path.dirname(this.faqsPath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+  /**
+   * Get client with caching
+   */
+  private async getClient(whatsappNumber: string): Promise<Client | null> {
+    // Check cache first
+    const cached = this.cacheService.getClient(whatsappNumber);
+    if (cached) {
+      return cached;
     }
 
-    fs.writeFileSync(this.faqsPath, JSON.stringify(defaultFAQs, null, 2));
-    console.log(chalk.green(`✅ Created default FAQ file at ${this.faqsPath}`));
-    this.faqs = defaultFAQs;
+    // Load from database
+    const client = await this.clientService.getClientByWhatsAppNumber(whatsappNumber);
+    
+    if (client) {
+      // Cache it
+      this.cacheService.setClient(whatsappNumber, client);
+    }
+
+    return client;
   }
 
-  private isBusinessHours(): boolean {
+  private isBusinessHours(client: Client): boolean {
     const now = new Date();
     const hour = now.getHours();
     const day = now.getDay(); // 0 = Sunday, 6 = Saturday
@@ -90,8 +73,9 @@ export class FAQBot {
       return false;
     }
 
-    // Check hours (9am-5pm by default)
-    return hour >= config.businessHours.start && hour < config.businessHours.end;
+    // Check hours from client config
+    const { start, end } = client.config.businessHours;
+    return hour >= start && hour < end;
   }
 
   private formatPhoneNumber(phone: string): string {
@@ -99,17 +83,25 @@ export class FAQBot {
     return phone.split('@')[0];
   }
 
-  private isAdmin(phone: string): boolean {
+  private isAdmin(phone: string, client: Client): boolean {
     const formatted = this.formatPhoneNumber(phone);
-    return config.adminNumbers.some(admin => formatted.includes(admin) || admin.includes(formatted));
+    return client.config.adminNumbers.some(admin => 
+      formatted.includes(admin) || admin.includes(formatted)
+    );
   }
 
   async start(): Promise<void> {
     console.log(chalk.blue('🚀 Starting WhatsApp FAQ Bot...\n'));
 
-    // Load FAQs
-    this.faqs = this.loadFAQs();
-    this.matcher = new FAQMatcher(this.faqs);
+    // Connect to MongoDB
+    await connectToMongoDB();
+    
+    // Start API server if enabled
+    const startAPI = process.env.START_API_SERVER === 'true' || process.env.START_API_SERVER === '1';
+    if (startAPI) {
+      const { startAPIServer } = await import('./api/server.js');
+      await startAPIServer();
+    }
 
     // Connect to WhatsApp
     await this.whatsapp.connect();
@@ -118,15 +110,33 @@ export class FAQBot {
     this.whatsapp.onMessage(async (data) => {
       const { from, message, isGroup } = data;
 
-      // Skip group messages for now (can enable later)
+      // Skip group messages
       if (isGroup) {
         return;
       }
 
       const phone = this.formatPhoneNumber(from);
+
+      // Check if this is a platform bot message (sent to admin number)
+      if (this.platformBotNumber && phone.includes(this.platformBotNumber.replace('+', ''))) {
+        // Handle platform bot message
+        const response = await this.platformBot.handleMessage(from, message);
+        await this.whatsapp.sendMessage(from, response);
+        console.log(chalk.magenta(`🤖 Platform Bot: ${phone} → ${message.substring(0, 50)}...`));
+        return;
+      }
+
+      // Get client from database
+      const client = await this.getClient(from);
+      
+      if (!client) {
+        console.log(chalk.yellow(`⚠️  No client found for ${from}`));
+        return;
+      }
+
       const upperMessage = message.toUpperCase().trim();
 
-      console.log(chalk.cyan(`📨 Message from ${phone}: ${message}`));
+      console.log(chalk.cyan(`📨 Message from ${phone} (${client.businessName}): ${message}`));
 
       // Handle special commands
       if (upperMessage === 'STOP') {
@@ -147,28 +157,64 @@ export class FAQBot {
         return;
       }
 
+      // Check subscription status
+      if (client.subscription.status === 'expired' || 
+          client.subscription.status === 'cancelled') {
+        await this.whatsapp.sendMessage(
+          from,
+          "⚠️ Your subscription has expired. Please renew to continue using the service."
+        );
+        console.log(chalk.yellow(`   → Sent: Subscription expired message`));
+        return;
+      }
+
+      // Check if trial expired
+      if (client.subscription.status === 'trial' && 
+          client.subscription.trialEndDate && 
+          new Date() > new Date(client.subscription.trialEndDate)) {
+        // Update status
+        await this.clientService.updateSubscriptionStatus(client.clientId, 'expired');
+        // Clear cache
+        this.cacheService.invalidateClient(from);
+        
+        await this.whatsapp.sendMessage(
+          from,
+          "⏰ Your free trial has ended. Subscribe now to continue."
+        );
+        console.log(chalk.yellow(`   → Sent: Trial expired message`));
+        return;
+      }
+
       // Admin commands
-      if (this.isAdmin(phone)) {
+      if (this.isAdmin(phone, client)) {
         if (upperMessage.startsWith('/RELOAD')) {
-          this.faqs = this.loadFAQs();
-          this.matcher = new FAQMatcher(this.faqs);
-          await this.whatsapp.sendMessage(from, '✅ FAQs reloaded!');
-          console.log(chalk.green(`   → Admin: Reloaded FAQs`));
+          // Reload client from database (clears cache)
+          this.cacheService.invalidateClient(from);
+          const reloadedClient = await this.getClient(from);
+          if (reloadedClient) {
+            await this.whatsapp.sendMessage(from, '✅ FAQs reloaded!');
+            console.log(chalk.green(`   → Admin: Reloaded FAQs`));
+          }
           return;
         }
 
         if (upperMessage.startsWith('/STATUS')) {
           const status = {
             connected: this.whatsapp.isConnected(),
-            faqsCount: this.faqs.length,
-            businessHours: this.isBusinessHours(),
-            currentTime: new Date().toLocaleString('en-NG', { timeZone: config.timezone }),
+            faqsCount: client.faqs.length,
+            businessHours: this.isBusinessHours(client),
+            subscriptionStatus: client.subscription.status,
+            subscriptionTier: client.subscription.tier,
+            currentTime: new Date().toLocaleString('en-NG', { 
+              timeZone: client.config.timezone 
+            }),
           };
           await this.whatsapp.sendMessage(
             from,
             `📊 Bot Status:\n` +
             `Connected: ${status.connected ? '✅' : '❌'}\n` +
             `FAQs: ${status.faqsCount}\n` +
+            `Subscription: ${status.subscriptionStatus} (${status.subscriptionTier})\n` +
             `Business Hours: ${status.businessHours ? 'Open' : 'Closed'}\n` +
             `Time: ${status.currentTime}`
           );
@@ -177,34 +223,170 @@ export class FAQBot {
         }
       }
 
-      // Check business hours
-      if (!this.isBusinessHours()) {
-        await this.whatsapp.sendMessage(from, config.afterHoursMessage);
-        console.log(chalk.yellow(`   → Sent: After-hours message`));
+      // Check rate limits (before processing - counts all messages)
+      const rateLimit = await this.rateLimiter.checkRateLimit(client, from);
+      if (!rateLimit.allowed) {
+        await this.whatsapp.sendMessage(
+          from,
+          `⚠️ Rate limit exceeded. ${rateLimit.reason}\n\n` +
+          `Your plan: ${client.subscription.tier}\n` +
+          `Please upgrade or wait before sending more messages.`
+        );
+        console.log(chalk.yellow(`   → Rate limit exceeded for ${phone}`));
+        // Still record the message for tracking
+        await this.rateLimiter.recordMessage(
+          client.clientId,
+          from,
+          message,
+          'Rate limit exceeded',
+          undefined
+        );
         return;
       }
 
-      // Try to match FAQ
-      const faq = this.matcher.match(message);
+      // Check business hours
+      if (!this.isBusinessHours(client)) {
+        const afterHoursResponse = client.config.afterHoursMessage;
+        await this.whatsapp.sendMessage(from, afterHoursResponse);
+        console.log(chalk.yellow(`   → Sent: After-hours message`));
+        // Record message for rate limiting
+        await this.rateLimiter.recordMessage(
+          client.clientId,
+          from,
+          message,
+          afterHoursResponse,
+          undefined
+        );
+        return;
+      }
 
-      if (faq) {
-        await this.whatsapp.sendMessage(from, faq.answer);
-        console.log(chalk.green(`   → Sent: FAQ match (${faq.category || 'unknown'})`));
-      } else {
-        // Default response
-        const defaultAnswer = this.matcher.getDefaultAnswer();
-        await this.whatsapp.sendMessage(from, defaultAnswer);
-        console.log(chalk.yellow(`   → Sent: Default response`));
+      // Process message with client's FAQs
+      const response = await this.processMessage(client, from, message);
+      
+      // Record message for rate limiting (after successful processing)
+      if (response) {
+        await this.rateLimiter.recordMessage(
+          client.clientId,
+          from,
+          message,
+          response.answer || response.defaultAnswer || '',
+          response.matchedFAQ
+        );
       }
     });
+
+    // Start subscription expiry checker (runs every hour)
+    this.startExpiryChecker();
+
+    // Start cache cleanup (runs every 10 minutes)
+    this.startCacheCleanup();
+
+    // Start resource monitoring (runs every 30 minutes)
+    this.startMonitoring();
 
     console.log(chalk.green('\n✅ Bot is running! Waiting for messages...\n'));
     console.log(chalk.gray('Press Ctrl+C to stop\n'));
   }
 
+  private startExpiryChecker(): void {
+    // Check for expired subscriptions every hour
+    this.expiryCheckInterval = setInterval(async () => {
+      try {
+        const count = await this.subscriptionService.checkExpiredSubscriptions();
+        if (count > 0) {
+          // Invalidate cache for expired clients
+          this.cacheService.clear();
+        }
+      } catch (error) {
+        console.error(chalk.red('❌ Error checking expired subscriptions:'), error);
+      }
+    }, 60 * 60 * 1000); // 1 hour
+
+    // Also check immediately on startup
+    this.subscriptionService.checkExpiredSubscriptions().catch((error) => {
+      console.error(chalk.red('❌ Error checking expired subscriptions on startup:'), error);
+    });
+  }
+
+  private startCacheCleanup(): void {
+    // Clean expired cache entries every 10 minutes
+    this.cacheCleanInterval = setInterval(() => {
+      try {
+        const cleaned = this.cacheService.cleanExpired();
+        if (cleaned > 0) {
+          console.log(chalk.gray(`🧹 Cleaned ${cleaned} expired cache entries`));
+        }
+      } catch (error) {
+        console.error(chalk.red('❌ Error cleaning cache:'), error);
+      }
+    }, 10 * 60 * 1000); // 10 minutes
+  }
+
+  private startMonitoring(): void {
+    // Monitor resources every 30 minutes
+    this.monitoringInterval = setInterval(async () => {
+      try {
+        await this.monitoringService.printMetrics();
+      } catch (error) {
+        console.error(chalk.red('❌ Error monitoring resources:'), error);
+      }
+    }, 30 * 60 * 1000); // 30 minutes
+
+    // Also check immediately on startup (after a delay)
+    setTimeout(async () => {
+      try {
+        await this.monitoringService.printMetrics();
+        this.cacheService.printStats();
+      } catch (error) {
+        console.error(chalk.red('❌ Error monitoring resources on startup:'), error);
+      }
+    }, 5000); // 5 seconds after startup
+  }
+
+  private async processMessage(
+    client: Client,
+    from: string,
+    message: string
+  ): Promise<{ answer?: string; defaultAnswer?: string; matchedFAQ?: string } | null> {
+    // Use client's FAQs
+    const matcher = new FAQMatcher(client.faqs);
+    const faq = matcher.match(message);
+
+    if (faq) {
+      await this.whatsapp.sendMessage(from, faq.answer);
+      console.log(chalk.green(`   → Sent: FAQ match (${faq.category || 'unknown'})`));
+      return { answer: faq.answer, matchedFAQ: faq.category };
+    } else {
+      // Default response
+      const defaultAnswer = matcher.getDefaultAnswer();
+      await this.whatsapp.sendMessage(from, defaultAnswer);
+      console.log(chalk.yellow(`   → Sent: Default response`));
+      return { defaultAnswer };
+    }
+  }
+
   async stop(): Promise<void> {
     console.log(chalk.yellow('\n🛑 Stopping bot...'));
+    
+    // Stop all intervals
+    if (this.expiryCheckInterval) {
+      clearInterval(this.expiryCheckInterval);
+      this.expiryCheckInterval = null;
+    }
+    if (this.cacheCleanInterval) {
+      clearInterval(this.cacheCleanInterval);
+      this.cacheCleanInterval = null;
+    }
+    if (this.monitoringInterval) {
+      clearInterval(this.monitoringInterval);
+      this.monitoringInterval = null;
+    }
+
+    // Print final stats
+    this.cacheService.printStats();
+    
     await this.whatsapp.disconnect();
+    await disconnectFromMongoDB();
     console.log(chalk.green('✅ Bot stopped'));
   }
 }

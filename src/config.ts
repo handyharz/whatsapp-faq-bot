@@ -9,7 +9,6 @@ dotenv.config();
 
 export const config = {
   authDir: process.env.AUTH_DIR || path.join(__dirname, '../auth'),
-  faqsPath: process.env.FAQS_PATH || path.join(__dirname, '../data/faqs.json'),
   businessHours: {
     start: parseInt(process.env.BUSINESS_HOURS_START || '9', 10),
     end: parseInt(process.env.BUSINESS_HOURS_END || '17', 10),

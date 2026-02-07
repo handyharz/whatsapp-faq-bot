@@ -47,6 +47,8 @@ export class SimpleWhatsAppClient {
         console.log('(Open WhatsApp > Linked Devices > Link a Device)\n');
         qrcode.generate(qr, { small: true });
         console.log('\n');
+        console.log('💡 Tip: If the QR code looks fragmented, copy all the lines above');
+        console.log('   and paste them into a text editor to see the full QR code.\n');
         console.log('Waiting for connection...\n');
       }
 

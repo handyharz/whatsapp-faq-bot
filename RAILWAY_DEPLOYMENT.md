@@ -105,8 +105,13 @@ NODE_ENV=production
 
 ### 3.2 Connect WhatsApp
 1. Check the logs for the QR code
-2. Scan with WhatsApp (Settings → Linked Devices → Link a Device)
-3. The bot should connect and be ready
+2. **Important**: Railway's log viewer may fragment the QR code across multiple lines
+3. **Solution**: 
+   - Copy all the QR code lines (from `▄▄▄▄▄▄▄` to the bottom border)
+   - Paste into a text editor (VS Code, Notepad, etc.) to see the complete QR code
+   - Or use Railway CLI: `railway logs` to view in terminal (better formatting)
+4. Scan the QR code with WhatsApp (Settings → Linked Devices → Link a Device)
+5. The bot should connect and show "✅ Connected to WhatsApp!"
 
 ## Step 4: Monitor and Test
 
