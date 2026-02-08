@@ -24,6 +24,10 @@ export class CacheService {
   private configCache: Map<string, Client['config']> = new Map();
   private subscriptionCache: Map<string, Client['subscription']> = new Map();
   
+  // CRITICAL: In-memory cache for workspace lookup (O(1) instead of DB roundtrip)
+  // Map<phoneNumber, workspaceId>
+  private workspaceLookupCache: Map<string, string> = new Map();
+  
   private readonly DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes
   private readonly MAX_CACHE_SIZE = 1000; // Max cached clients
   
@@ -31,6 +35,8 @@ export class CacheService {
   private stats = {
     hits: 0,
     misses: 0,
+    workspaceLookups: 0,
+    workspaceHits: 0,
   };
 
   /**
@@ -139,7 +145,8 @@ export class CacheService {
     this.faqCache.clear();
     this.configCache.clear();
     this.subscriptionCache.clear();
-    this.stats = { hits: 0, misses: 0 };
+    this.workspaceLookupCache.clear();
+    this.stats = { hits: 0, misses: 0, workspaceLookups: 0, workspaceHits: 0 };
   }
 
   /**
@@ -210,5 +217,64 @@ export class CacheService {
    */
   getCacheSize(): number {
     return this.clientCache.size;
+  }
+
+  /**
+   * CRITICAL: Get workspaceId by phone number (O(1) lookup)
+   * This prevents DB roundtrip on every message
+   */
+  getWorkspaceIdByPhone(phoneNumber: string): string | null {
+    this.stats.workspaceLookups++;
+    const workspaceId = this.workspaceLookupCache.get(phoneNumber);
+    if (workspaceId) {
+      this.stats.workspaceHits++;
+      return workspaceId;
+    }
+    return null;
+  }
+
+  /**
+   * CRITICAL: Set workspaceId for phone number
+   * Call this when workspace is created/updated
+   */
+  setWorkspacePhoneMapping(phoneNumber: string, workspaceId: string): void {
+    this.workspaceLookupCache.set(phoneNumber, workspaceId);
+  }
+
+  /**
+   * CRITICAL: Remove workspace phone mapping
+   * Call this when phone number is removed from workspace
+   */
+  removeWorkspacePhoneMapping(phoneNumber: string): void {
+    this.workspaceLookupCache.delete(phoneNumber);
+  }
+
+  /**
+   * CRITICAL: Warm workspace lookup cache
+   * Call this on startup to load all workspace phone mappings
+   */
+  async warmWorkspaceCache(workspaceService: any): Promise<void> {
+    try {
+      const workspaces = await workspaceService.getActiveWorkspaces();
+      let loaded = 0;
+      
+      for (const workspace of workspaces) {
+        for (const phone of workspace.phoneNumbers) {
+          this.workspaceLookupCache.set(phone, workspace.workspaceId);
+          loaded++;
+        }
+      }
+      
+      console.log(chalk.green(`✅ Workspace lookup cache warmed: ${loaded} phone numbers mapped`));
+    } catch (error) {
+      console.error(chalk.yellow('⚠️  Error warming workspace cache:'), error);
+    }
+  }
+
+  /**
+   * Clear workspace lookup cache
+   */
+  clearWorkspaceCache(): void {
+    this.workspaceLookupCache.clear();
   }
 }

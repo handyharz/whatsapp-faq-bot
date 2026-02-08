@@ -158,23 +158,41 @@ export class RateLimiter {
 
   /**
    * Record a message for rate limiting
+   * CRITICAL: Uses future-proof message schema with direction and workspaceId
    */
   async recordMessage(
     clientId: string,
     from: string,
     message: string,
     response: string,
-    matchedFAQ?: string
+    matchedFAQ?: string,
+    workspaceId?: string,
+    connectionId?: string
   ): Promise<void> {
     const db = getDatabase();
     const messagesCollection = db.collection('messages');
 
+    // CRITICAL: Future-proof schema
+    // Every message must have: workspaceId, direction, connectionId (when available)
     await messagesCollection.insertOne({
-      clientId,
+      // Tenant isolation
+      workspaceId, // Primary (for workspaces)
+      clientId, // Legacy (for backward compatibility)
+      
+      // CRITICAL: Message direction (inbound for now, outbound later)
+      direction: 'inbound' as const,
+      
+      // CRITICAL: Connection ID (immutable identity)
+      connectionId, // Will be populated when connection model is implemented
+      
+      // Message content
       from,
+      to: '', // Will be populated with bot's number
       message,
       response,
       matchedFAQ,
+      
+      // Metadata
       timestamp: new Date(),
       hour: new Date().toISOString().slice(0, 13), // "2026-02-06T14"
       day: new Date().toISOString().slice(0, 10),   // "2026-02-06"

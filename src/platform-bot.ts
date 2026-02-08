@@ -280,9 +280,60 @@ export class PlatformBot {
   }
 
   /**
+   * Check if message looks like a business inquiry (not platform support)
+   * CRITICAL: Prevents routing business inquiries to platform bot
+   * Example: Customer messages wrong number, we detect it's a business inquiry
+   */
+  private looksLikeBusinessInquiry(message: string): boolean {
+    const lower = message.toLowerCase();
+    
+    // Business inquiry keywords
+    const businessKeywords = [
+      // Food orders
+      'order', 'menu', 'food', 'delivery', 'takeaway', 'pickup',
+      'jollof', 'rice', 'chicken', 'pizza', 'burger', 'meal',
+      
+      // Bookings
+      'book', 'reservation', 'table', 'appointment', 'schedule',
+      
+      // Pricing inquiries
+      'price', 'cost', 'how much', 'naira', '₦', 'fee', 'charge',
+      
+      // Product inquiries
+      'product', 'item', 'available', 'stock', 'inventory', 'sell',
+      
+      // Service inquiries
+      'service', 'offer', 'do you', 'can you', 'provide',
+      
+      // Location
+      'where', 'location', 'address', 'find', 'directions',
+      
+      // Hours
+      'open', 'closed', 'hours', 'when', 'time',
+    ];
+    
+    // Check if message contains business inquiry keywords
+    return businessKeywords.some(keyword => lower.includes(keyword));
+  }
+
+  /**
    * Handle incoming message for platform bot
+   * CRITICAL: Checks intent before responding (prevents routing business inquiries)
    */
   async handleMessage(from: string, message: string): Promise<string> {
+    // CRITICAL: Check if this looks like a business inquiry (wrong number scenario)
+    if (this.looksLikeBusinessInquiry(message)) {
+      return `It looks like you may be trying to reach a business. 🤔
+
+Please double-check the WhatsApp number you're messaging.
+
+If you're looking for WhatsApp FAQ Bot support, I can help with:
+• 💰 Pricing and plans
+• 🚀 Getting started
+• 🛠️ Technical support
+
+Or visit www.exonec.com for more information. 😊`;
+    }
     const upperMessage = message.toUpperCase().trim();
 
     // Handle special commands

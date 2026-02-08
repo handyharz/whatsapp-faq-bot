@@ -3,6 +3,8 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { connectToMongoDB, getDatabase, getClientsCollection, getTransactionsCollection } from '../db/mongodb.js';
 import { Transaction } from '../models/transaction.js';
+import { Client } from '../models/client.js';
+import { Workspace } from '../models/workspace.js';
 import { ClientService } from '../services/client-service.js';
 import { AdminService } from '../services/admin-service.js';
 import { RateLimiter } from '../services/rate-limiter.js';
@@ -10,9 +12,13 @@ import { SubscriptionService } from '../services/subscription-service.js';
 import { PaymentService } from '../services/payment-service.js';
 import { CacheService } from '../services/cache-service.js';
 import { MonitoringService } from '../services/monitoring-service.js';
+import { WorkspaceService } from '../services/workspace-service.js';
+import { ConnectionMonitorService } from '../services/connection-monitor.js';
 import { generateTokenPair, verifyRefreshToken } from '../utils/jwt.js';
 import { verifyPassword, hashPassword } from '../utils/password.js';
 import { authenticateToken, requireAdmin, requireClient } from '../middleware/auth.js';
+import { generateVerificationToken, sendVerificationEmail } from '../utils/email-verification.js';
+import { getBotInstance, initializeBotInstance } from '../bot.js';
 import chalk from 'chalk';
 
 const app = express();
@@ -34,6 +40,8 @@ const subscriptionService = new SubscriptionService();
 const paymentService = new PaymentService();
 const cacheService = new CacheService();
 const monitoringService = new MonitoringService(cacheService);
+const workspaceService = new WorkspaceService();
+const connectionMonitor = new ConnectionMonitorService();
 
 // Helper function to safely get string from query params
 function getStringParam(value: any): string | null {
@@ -248,6 +256,195 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ success: true, message: 'Logged out successfully' });
 });
 
+// Verify email address
+app.post('/api/auth/verify-email', async (req, res) => {
+  try {
+    const { token, email } = req.body;
+
+    if (!token || !email) {
+      return res.status(400).json({ error: 'Token and email are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    console.log(chalk.blue(`🔍 Verifying email: ${normalizedEmail} with token: ${token.substring(0, 16)}...`));
+
+    // Try to find client by email and token
+    let client = await getClientsCollection().findOne({ 
+      email: normalizedEmail,
+      emailVerificationToken: token,
+    }) as any; // Type assertion to handle Client vs WithId<Client>
+
+    // If not found in client, try workspace
+    let workspace = null;
+    if (!client) {
+      console.log(chalk.yellow(`⚠️  Token not found in client collection, checking workspace...`));
+      workspace = await workspaceService.getWorkspaceByEmail(normalizedEmail);
+      
+      if (workspace && workspace.emailVerificationToken === token) {
+        console.log(chalk.blue(`✅ Token found in workspace, fetching client...`));
+        // Find client by workspaceId
+        if (workspace.clientId) {
+          const foundClient = await clientService.getClientById(workspace.clientId);
+          if (foundClient) {
+            client = foundClient as any;
+          }
+        } else if (workspace.workspaceId) {
+          // Try to find client by workspaceId
+          const foundClient = await getClientsCollection().findOne({ workspaceId: workspace.workspaceId });
+          if (foundClient) {
+            client = foundClient as any;
+          }
+        }
+      }
+    } else {
+      // Client found, also get workspace for consistency
+      if (client.workspaceId) {
+        workspace = await workspaceService.getWorkspaceById(client.workspaceId);
+      }
+    }
+
+    // If still no match, check if token exists but doesn't match
+    if (!client && !workspace) {
+      // Check if email exists but token doesn't match
+      const clientByEmail = await getClientsCollection().findOne({ email: normalizedEmail });
+      const workspaceByEmail = await workspaceService.getWorkspaceByEmail(normalizedEmail);
+      
+      if (clientByEmail || workspaceByEmail) {
+        console.log(chalk.red(`❌ Email found but token mismatch. Email: ${normalizedEmail}`));
+        console.log(chalk.red(`   Client token: ${clientByEmail?.emailVerificationToken?.substring(0, 16) || 'none'}...`));
+        console.log(chalk.red(`   Workspace token: ${workspaceByEmail?.emailVerificationToken?.substring(0, 16) || 'none'}...`));
+        console.log(chalk.red(`   Provided token: ${token.substring(0, 16)}...`));
+        return res.status(400).json({ error: 'Invalid verification token. The token in your email link does not match our records.' });
+      }
+      
+      return res.status(400).json({ error: 'Invalid verification token or email' });
+    }
+
+    // Determine which entity has the token
+    const entityWithToken = client?.emailVerificationToken === token ? client : workspace;
+    if (!entityWithToken) {
+      return res.status(400).json({ error: 'Invalid verification token or email' });
+    }
+
+    // Check if token is expired
+    const expiresAt = entityWithToken.emailVerificationExpires;
+    if (expiresAt && new Date() > expiresAt) {
+      return res.status(400).json({ error: 'Verification token has expired. Please request a new one.' });
+    }
+
+    // Check if already verified
+    if (entityWithToken.emailVerified) {
+      return res.json({ 
+        success: true, 
+        message: 'Email already verified',
+        alreadyVerified: true,
+      });
+    }
+
+    // Update client email as verified
+    if (client) {
+      const updateResult = await getClientsCollection().updateOne(
+        { clientId: client.clientId },
+        { 
+          $set: { 
+            emailVerified: true,
+            updatedAt: new Date(),
+          },
+          $unset: {
+            emailVerificationToken: '',
+            emailVerificationExpires: '',
+          }
+        }
+      );
+      
+      if (updateResult.modifiedCount === 0) {
+        console.warn(chalk.yellow(`⚠️  Client ${client.clientId} update returned modifiedCount=0`));
+      } else {
+        console.log(chalk.green(`✅ Client ${client.clientId} email verified`));
+      }
+    }
+
+    // Also update workspace if it exists
+    if (workspace) {
+      await workspaceService.updateWorkspace(workspace.workspaceId, {
+        emailVerified: true,
+        emailVerificationToken: undefined,
+        emailVerificationExpires: undefined,
+      });
+      console.log(chalk.green(`✅ Workspace ${workspace.workspaceId} email verified`));
+    }
+
+    console.log(chalk.green(`✅ Email verified for ${normalizedEmail}`));
+
+    res.json({
+      success: true,
+      message: 'Email verified successfully',
+    });
+  } catch (error) {
+    console.error('Email verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Resend verification email
+app.post('/api/auth/resend-verification', authenticateToken, async (req, res) => {
+  try {
+    const user = req.user!;
+    
+    if (user.role !== 'client') {
+      return res.status(403).json({ error: 'Only clients can request verification resend' });
+    }
+
+    const client = await clientService.getClientById(user.userId);
+    if (!client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    if (client.emailVerified) {
+      return res.json({ 
+        success: true, 
+        message: 'Email already verified',
+        alreadyVerified: true,
+      });
+    }
+
+    // Generate new verification token
+    const verificationToken = generateVerificationToken();
+    const verificationExpires = new Date();
+    verificationExpires.setHours(verificationExpires.getHours() + 24);
+
+    // Update client with new token
+    await getClientsCollection().updateOne(
+      { clientId: client.clientId },
+      { 
+        $set: { 
+          emailVerificationToken: verificationToken,
+          emailVerificationExpires: verificationExpires,
+          updatedAt: new Date(),
+        }
+      }
+    );
+
+    // Send verification email
+    const sent = await sendVerificationEmail(client.email, client.businessName, verificationToken);
+    if (!sent) {
+      console.warn('⚠️ Verification email not sent (RESEND_API_KEY not configured). User can still proceed.');
+    }
+    
+    if (!sent) {
+      return res.status(500).json({ error: 'Failed to send verification email' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Verification email sent',
+    });
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Request password reset
 app.post('/api/auth/forgot-password', async (req, res) => {
   try {
@@ -394,6 +591,216 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
   }
 });
 
+// --- Self-Serve Workspace Creation (Public Endpoint) ---
+
+/**
+ * POST /api/workspaces
+ * 
+ * Self-serve workspace creation - creates workspace + client account in one call
+ * This is the growth engine - removes manual onboarding bottleneck
+ * 
+ * Request:
+ * {
+ *   businessName: string;
+ *   email: string;
+ *   password: string;
+ *   whatsappNumber: string;
+ *   niche?: string;
+ *   timezone?: string;
+ *   businessHours?: { start: number, end: number };
+ * }
+ * 
+ * Response:
+ * {
+ *   workspace: Workspace;
+ *   client: Client;
+ *   tokens: { accessToken, refreshToken };
+ * }
+ */
+app.post('/api/workspaces', async (req, res) => {
+  try {
+    const { businessName, email, password, whatsappNumber, niche, timezone, businessHours } = req.body;
+
+    // Validate required fields
+    if (!businessName || !email || !password || !whatsappNumber) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: businessName, email, password, whatsappNumber' 
+      });
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      return res.status(400).json({ 
+        error: 'Password must be at least 8 characters long' 
+      });
+    }
+
+    // Check if email already exists
+    const existingClient = await getClientsCollection().findOne({ 
+      email: email.toLowerCase() 
+    });
+    if (existingClient) {
+      return res.status(400).json({ 
+        error: 'An account with this email already exists' 
+      });
+    }
+
+    // Check if phone number is globally unique
+    const isPhoneUnique = await workspaceService.isPhoneNumberGloballyUnique(whatsappNumber);
+    if (!isPhoneUnique) {
+      return res.status(400).json({ 
+        error: 'This WhatsApp number is already registered to another workspace' 
+      });
+    }
+
+    // Generate workspace ID
+    const crypto = await import('crypto');
+    const workspaceId = `workspace_${crypto.randomBytes(8).toString('hex')}`;
+    const clientId = `client_${crypto.randomBytes(8).toString('hex')}`;
+
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+
+    // Calculate trial dates (14-day trial)
+    const now = new Date();
+    const trialEndDate = new Date(now);
+    trialEndDate.setDate(trialEndDate.getDate() + 14);
+
+    // Generate email verification token
+    const verificationToken = generateVerificationToken();
+    const verificationExpires = new Date(now);
+    verificationExpires.setHours(verificationExpires.getHours() + 24); // 24 hours
+
+    // Create workspace
+    const workspace = await workspaceService.createWorkspace({
+      workspaceId,
+      businessName,
+      phoneNumbers: [whatsappNumber],
+      email: email.toLowerCase(),
+      botConfig: {
+        type: 'faq', // Default to FAQ bot
+      },
+      subscription: {
+        status: 'trial',
+        tier: 'trial',
+        trialStartDate: now,
+        trialEndDate,
+      },
+      settings: {
+        businessHours: businessHours || { start: 9, end: 17 },
+        timezone: timezone || 'Africa/Lagos',
+        afterHoursMessage: "Thanks for your message! We're currently closed. We'll reply first thing tomorrow. 😊",
+        adminNumbers: [whatsappNumber], // Owner's number is admin by default
+      },
+      faqs: [], // Start with empty FAQs
+      clientId, // Link to client for backward compatibility
+      emailVerified: false, // Email not verified yet
+      emailVerificationToken: verificationToken,
+      emailVerificationExpires: verificationExpires,
+    });
+
+    // Create client account (linked to workspace)
+    const client = await clientService.createClient({
+      clientId,
+      businessName,
+      slug: businessName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+      niche: (niche || 'other') as any,
+      whatsappNumber,
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      originalWhatsappNumber: whatsappNumber, // Track original for trial abuse prevention
+      faqs: [],
+      config: {
+        businessHours: businessHours || { start: 9, end: 17 },
+        timezone: timezone || 'Africa/Lagos',
+        afterHoursMessage: "Thanks for your message! We're currently closed. We'll reply first thing tomorrow. 😊",
+        adminNumbers: [whatsappNumber],
+      },
+      subscription: {
+        status: 'trial',
+        tier: 'trial',
+        trialStartDate: now,
+        trialEndDate,
+      },
+      workspaceId, // Link to workspace
+      emailVerified: false, // Email not verified yet
+      emailVerificationToken: verificationToken,
+      emailVerificationExpires: verificationExpires,
+    });
+
+    // Send verification email (async, don't wait)
+    sendVerificationEmail(email.toLowerCase(), businessName, verificationToken).then(sent => {
+      if (!sent) {
+        console.warn('⚠️ Verification email not sent (RESEND_API_KEY not configured). User can still proceed.');
+      }
+    }).catch(err => {
+      console.error('Failed to send verification email:', err);
+      // Don't fail the request if email fails
+    });
+
+    // Generate JWT tokens
+    const tokens = generateTokenPair({
+      userId: client.clientId,
+      email: client.email,
+      role: 'client',
+    });
+
+    // Set httpOnly cookies
+    res.cookie('accessToken', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    console.log(chalk.green(`✅ New workspace created: ${workspaceId} (${businessName})`));
+
+    res.status(201).json({
+      success: true,
+      workspace: {
+        workspaceId: workspace.workspaceId,
+        businessName: workspace.businessName,
+        email: workspace.email,
+        phoneNumbers: workspace.phoneNumbers,
+        subscription: workspace.subscription,
+        emailVerified: false, // Email verification pending
+      },
+      client: {
+        clientId: client.clientId,
+        businessName: client.businessName,
+        email: client.email,
+        emailVerified: false,
+      },
+      tokens: {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      },
+      verificationEmailSent: true,
+    });
+  } catch (error: any) {
+    console.error(chalk.red('❌ Workspace creation error:'), error);
+    
+    // Handle specific errors
+    if (error.message?.includes('already registered')) {
+      return res.status(400).json({ error: error.message });
+    }
+    
+    res.status(500).json({ 
+      error: 'Failed to create workspace',
+      message: error?.message || 'Internal server error'
+    });
+  }
+});
+
 // Client API Routes (protected with JWT)
 app.get('/api/client/profile', requireClient, async (req, res) => {
   try {
@@ -435,15 +842,33 @@ app.get('/api/client/faqs', requireClient, async (req, res) => {
       return res.status(404).json({ error: 'Client not found' });
     }
 
-    // Get FAQ limit for the client's tier
-    const tier = client.subscription.status === 'trial' ? 'trial' : client.subscription.tier;
+    // CRITICAL: Get workspace (FAQs are stored in workspace in new architecture)
+    const workspaceId = client.workspaceId;
+    let workspace = null;
+    
+    if (workspaceId) {
+      workspace = await workspaceService.getWorkspaceById(workspaceId);
+    }
+
+    // If no workspace, try to find by clientId (backward compatibility)
+    if (!workspace && clientId) {
+      workspace = await workspaceService.getWorkspaceByClientId(clientId);
+    }
+
+    // Determine subscription tier from workspace or client
+    const tier = workspace 
+      ? (workspace.subscription.status === 'trial' ? 'trial' : workspace.subscription.tier)
+      : (client.subscription.status === 'trial' ? 'trial' : client.subscription.tier);
     const limit = FAQ_LIMITS[tier] || FAQ_LIMITS.starter;
+
+    // CRITICAL: Return FAQs from workspace (primary source) or fallback to client
+    const faqs = workspace?.faqs || client.faqs || [];
 
     res.json({
       success: true,
-      faqs: client.faqs,
+      faqs: faqs,
       limit: limit === -1 ? null : limit,
-      currentCount: client.faqs?.length || 0,
+      currentCount: faqs.length,
       tier: tier,
     });
   } catch (error) {
@@ -477,8 +902,23 @@ app.put('/api/client/faqs', requireClient, async (req, res) => {
       return res.status(404).json({ error: 'Client not found' });
     }
 
-    // Check FAQ limit based on subscription tier
-    const tier = client.subscription.status === 'trial' ? 'trial' : client.subscription.tier;
+    // CRITICAL: Get workspace (FAQs are stored in workspace in new architecture)
+    const workspaceId = client.workspaceId;
+    let workspace = null;
+    
+    if (workspaceId) {
+      workspace = await workspaceService.getWorkspaceById(workspaceId);
+    }
+
+    // If no workspace, try to find by clientId (backward compatibility)
+    if (!workspace && clientId) {
+      workspace = await workspaceService.getWorkspaceByClientId(clientId);
+    }
+
+    // Determine subscription tier from workspace or client
+    const tier = workspace 
+      ? (workspace.subscription.status === 'trial' ? 'trial' : workspace.subscription.tier)
+      : (client.subscription.status === 'trial' ? 'trial' : client.subscription.tier);
     const limit = FAQ_LIMITS[tier] || FAQ_LIMITS.starter;
     
     if (limit !== -1 && faqs.length > limit) {
@@ -491,27 +931,79 @@ app.put('/api/client/faqs', requireClient, async (req, res) => {
       });
     }
 
-    console.log('📝 Updating FAQs for client:', client.businessName, 'Current FAQs:', client.faqs.length, 'New FAQs:', faqs.length, `Limit: ${limit === -1 ? 'unlimited' : limit}`);
+    console.log('📝 Updating FAQs for client:', client.businessName, 'Current FAQs:', workspace?.faqs?.length || client.faqs.length, 'New FAQs:', faqs.length, `Limit: ${limit === -1 ? 'unlimited' : limit}`);
 
-    const updated = await clientService.updateFAQs(clientId, faqs);
-
-    if (!updated) {
-      console.error('❌ Failed to update FAQs - updateClient returned null');
-      return res.status(500).json({ error: 'Failed to update FAQs' });
+    // CRITICAL: Update workspace FAQs (primary storage in new architecture)
+    let updatedWorkspace: Workspace | null = null;
+    let updatedClient: Client | null = null;
+    
+    if (workspace) {
+      try {
+        updatedWorkspace = await workspaceService.updateFAQs(workspace.workspaceId, faqs);
+        if (!updatedWorkspace) {
+          console.error('❌ Failed to update workspace FAQs - updateWorkspace returned null');
+          console.error('   Workspace ID:', workspace.workspaceId);
+          console.error('   FAQs count:', faqs.length);
+          // Don't log full FAQ content - too verbose and may contain sensitive data
+          return res.status(500).json({ error: 'Failed to update workspace FAQs' });
+        }
+        console.log('✅ Workspace FAQs updated successfully. New count:', updatedWorkspace.faqs?.length || 0);
+        
+        // Also update client FAQs for backward compatibility
+        try {
+          updatedClient = await clientService.updateFAQs(clientId, faqs);
+          console.log('✅ Client FAQs updated (backward compatibility)');
+        } catch (clientError) {
+          console.error('⚠️  Failed to update client FAQs (non-critical):', clientError);
+          // Don't fail the request if client update fails - workspace is primary
+        }
+      } catch (workspaceError) {
+        console.error('❌ Error updating workspace FAQs:', workspaceError);
+        return res.status(500).json({ 
+          error: 'Failed to update FAQs',
+          details: workspaceError instanceof Error ? workspaceError.message : 'Unknown error'
+        });
+      }
+    } else {
+      // Fallback: Update client FAQs if no workspace found (shouldn't happen in new architecture)
+      console.warn('⚠️  No workspace found, updating client FAQs only (backward compatibility)');
+      try {
+        updatedClient = await clientService.updateFAQs(clientId, faqs);
+        if (!updatedClient) {
+          console.error('❌ Failed to update FAQs - updateClient returned null');
+          return res.status(500).json({ error: 'Failed to update FAQs' });
+        }
+        console.log('✅ Client FAQs updated. New count:', updatedClient.faqs?.length || 0);
+      } catch (clientError) {
+        console.error('❌ Error updating client FAQs:', clientError);
+        return res.status(500).json({ 
+          error: 'Failed to update FAQs',
+          details: clientError instanceof Error ? clientError.message : 'Unknown error'
+        });
+      }
     }
-
-    console.log('✅ FAQs updated successfully. New count:', updated.faqs?.length || 0);
 
     // Invalidate cache
     cacheService.invalidateByClientId(clientId);
     cacheService.invalidateClient(client.whatsappNumber);
+    
+    // Invalidate workspace cache if exists
+    if (workspaceId) {
+      const workspaceToUse = updatedWorkspace || workspace;
+      for (const phone of workspaceToUse?.phoneNumbers || []) {
+        cacheService.invalidateClient(phone);
+      }
+    }
+
+    // Return FAQs from updated workspace (primary) or updated client (fallback)
+    const finalFaqs = updatedWorkspace?.faqs || updatedClient?.faqs || [];
 
     res.json({
       success: true,
       message: 'FAQs updated successfully',
-      faqs: updated.faqs,
+      faqs: finalFaqs,
       limit: limit === -1 ? null : limit,
-      currentCount: updated.faqs?.length || 0,
+      currentCount: finalFaqs.length,
     });
   } catch (error) {
     console.error('❌ Update FAQs error:', error);
@@ -587,6 +1079,396 @@ app.get('/api/client/stats', requireClient, async (req, res) => {
   } catch (error) {
     console.error('Get stats error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get connection status for client's workspace
+// Get QR code (public endpoint - anyone can see it)
+app.get('/api/qr-code', async (req, res) => {
+  try {
+    // Initialize bot instance if not already created
+    const bot = getBotInstance() || initializeBotInstance();
+    
+    const qrCode = bot.getCurrentQR();
+    
+    if (!qrCode) {
+      return res.json({
+        success: true,
+        qrCode: null,
+        message: 'No QR code available. Bot may already be connected or is connecting.',
+      });
+    }
+
+    res.json({
+      success: true,
+      qrCode,
+      message: 'QR code available. Scan with WhatsApp.',
+    });
+  } catch (error) {
+    console.error('QR code error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/client/connection-status', requireClient, async (req, res) => {
+  try {
+    const clientId = req.user!.userId;
+    const client = await clientService.getClientById(clientId);
+
+    if (!client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    // Get workspace ID from client
+    const workspaceId = client.workspaceId;
+    if (!workspaceId) {
+      return res.json({
+        success: true,
+        status: 'unknown',
+        message: 'Workspace not found',
+      });
+    }
+
+    // Get connection status from connection manager
+    const bot = getBotInstance() || initializeBotInstance();
+    const connectionManager = bot.getConnectionManager();
+    const connectionInfo = connectionManager.getConnectionStatus(workspaceId);
+    
+    if (!connectionInfo) {
+      // Check database status as fallback
+      const connectionStatus = await connectionMonitor.getConnectionStatus(workspaceId);
+      if (!connectionStatus) {
+        return res.json({
+          success: true,
+          status: 'disconnected',
+          message: 'Not connected. Click "Connect WhatsApp" to start.',
+        });
+      }
+      return res.json({
+        success: true,
+        status: connectionStatus.status,
+        lastConnectedAt: connectionStatus.lastConnectedAt,
+        lastDisconnectedAt: connectionStatus.lastDisconnectedAt,
+        disconnectReason: connectionStatus.disconnectReason,
+      });
+    }
+
+    res.json({
+      success: true,
+      status: connectionInfo.status,
+      lastConnectedAt: connectionInfo.connectedAt,
+      lastDisconnectedAt: connectionInfo.lastDisconnectedAt,
+      disconnectReason: connectionInfo.disconnectReason,
+    });
+  } catch (error) {
+    console.error('Connection status error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// --- WhatsApp Connection Endpoints (Multi-Connection Architecture) ---
+
+/**
+ * POST /api/client/whatsapp/connect
+ * Initiate WhatsApp connection for the authenticated client's workspace
+ * Returns QR code for scanning
+ */
+app.post('/api/client/whatsapp/connect', requireClient, async (req, res) => {
+  try {
+    const clientId = req.user!.userId;
+    const client = await clientService.getClientById(clientId);
+
+    if (!client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    // Get workspace ID from client
+    const workspaceId = client.workspaceId;
+    if (!workspaceId) {
+      return res.status(404).json({ error: 'Workspace not found for this client' });
+    }
+
+    // Get bot instance and connection manager
+    // CRITICAL: Ensure bot is started (not just initialized) before using connection manager
+    let bot = getBotInstance();
+    if (!bot) {
+      console.log(chalk.yellow('⚠️  Bot instance not found, initializing...'));
+      bot = initializeBotInstance();
+      // Wait a bit for bot to start
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    const connectionManager = bot.getConnectionManager();
+    
+    if (!connectionManager) {
+      throw new Error('Connection manager not available. Bot may not be fully started.');
+    }
+
+    // Check if already connected
+    const existingConnection = connectionManager.getConnectionStatus(workspaceId);
+    if (existingConnection && existingConnection.status === 'connected') {
+      return res.json({
+        success: true,
+        connected: true,
+        message: 'WhatsApp is already connected',
+      });
+    }
+
+    // Create connection (this will generate QR code)
+    console.log(chalk.blue(`📱 Client ${clientId} requesting WhatsApp connection for workspace ${workspaceId}`));
+    
+    try {
+      const qrCode = await connectionManager.createConnection(workspaceId);
+      
+      res.json({
+        success: true,
+        qrCode,
+        workspaceId,
+        message: 'QR code generated. Scan with WhatsApp to connect.',
+      });
+    } catch (error: any) {
+      // If already connecting, return existing QR
+      if (existingConnection && existingConnection.status === 'connecting') {
+        const qrCode = connectionManager.getQRCode(workspaceId);
+        if (qrCode) {
+          return res.json({
+            success: true,
+            qrCode,
+            workspaceId,
+            message: 'Connection in progress. Scan the QR code with WhatsApp.',
+          });
+        }
+      }
+      
+      // Error is already user-friendly from WhatsAppConnectionManager
+      throw error;
+    }
+  } catch (error: any) {
+    console.error('WhatsApp connect error:', error);
+    res.status(500).json({ 
+      error: error.message || 'Failed to create WhatsApp connection',
+      details: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/client/whatsapp/qr
+ * Get current QR code for the authenticated client's workspace
+ */
+app.get('/api/client/whatsapp/qr', requireClient, async (req, res) => {
+  try {
+    const clientId = req.user!.userId;
+    const client = await clientService.getClientById(clientId);
+
+    if (!client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    // Get workspace ID from client
+    const workspaceId = client.workspaceId;
+    if (!workspaceId) {
+      return res.status(404).json({ error: 'Workspace not found' });
+    }
+
+    // Get bot instance and connection manager
+    const bot = getBotInstance();
+    if (!bot) {
+      return res.status(503).json({ error: 'Bot not initialized' });
+    }
+
+    const connectionManager = bot.getConnectionManager();
+    const qrCode = connectionManager.getQRCode(workspaceId);
+    const connectionInfo = connectionManager.getConnectionStatus(workspaceId);
+
+    if (!qrCode) {
+      if (connectionInfo && connectionInfo.status === 'connected') {
+        return res.json({
+          success: true,
+          qrCode: null,
+          connected: true,
+          message: 'WhatsApp is connected. No QR code needed.',
+        });
+      }
+      return res.json({
+        success: true,
+        qrCode: null,
+        message: 'No QR code available. Click "Connect WhatsApp" to generate one.',
+      });
+    }
+
+    res.json({
+      success: true,
+      qrCode,
+      workspaceId,
+      message: 'QR code available. Scan with WhatsApp.',
+    });
+  } catch (error) {
+    console.error('Get QR code error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/client/whatsapp/status
+ * Get connection status for the authenticated client's workspace
+ */
+app.get('/api/client/whatsapp/status', requireClient, async (req, res) => {
+  try {
+    const clientId = req.user!.userId;
+    const client = await clientService.getClientById(clientId);
+
+    if (!client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    // Get workspace ID from client
+    const workspaceId = client.workspaceId;
+    if (!workspaceId) {
+      return res.status(404).json({ error: 'Workspace not found' });
+    }
+
+    // Get bot instance and connection manager
+    const bot = getBotInstance();
+    if (!bot) {
+      return res.json({
+        success: true,
+        status: 'disconnected',
+        message: 'Bot not initialized',
+      });
+    }
+
+    const connectionManager = bot.getConnectionManager();
+    const connectionInfo = connectionManager.getConnectionStatus(workspaceId);
+
+    if (!connectionInfo) {
+      // Check database status as fallback
+      const workspace = await workspaceService.getWorkspaceById(workspaceId);
+      return res.json({
+        success: true,
+        status: workspace?.whatsappConnectionStatus || 'disconnected',
+        connected: workspace?.whatsappConnected || false,
+        message: workspace?.whatsappConnected ? 'Connected' : 'Not connected',
+      });
+    }
+
+    res.json({
+      success: true,
+      status: connectionInfo.status,
+      connected: connectionInfo.status === 'connected',
+      qrCode: connectionInfo.qrCode,
+      lastConnectedAt: connectionInfo.connectedAt,
+      lastDisconnectedAt: connectionInfo.lastDisconnectedAt,
+      disconnectReason: connectionInfo.disconnectReason,
+    });
+  } catch (error) {
+    console.error('Get connection status error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/client/whatsapp/health
+ * Check connection health (verify message delivery capability)
+ */
+app.get('/api/client/whatsapp/health', requireClient, async (req, res) => {
+  try {
+    const clientId = req.user!.userId;
+    const client = await clientService.getClientById(clientId);
+
+    if (!client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    // Get workspace ID from client
+    const workspaceId = client.workspaceId;
+    if (!workspaceId) {
+      return res.status(404).json({ error: 'Workspace not found' });
+    }
+
+    // Get bot instance and connection manager
+    const bot = getBotInstance();
+    if (!bot) {
+      return res.status(503).json({ error: 'Bot not initialized' });
+    }
+
+    const connectionManager = bot.getConnectionManager();
+    const health = await connectionManager.healthCheck(workspaceId);
+    
+    res.json({
+      success: true,
+      operational: health.operational,
+      status: health.status, // 'operational' | 'degraded' | 'unknown'
+      error: health.error,
+      lastSuccessfulOutbound: health.lastSuccessfulOutbound,
+      lastInboundMessage: health.lastInboundMessage,
+      lastChecked: health.lastChecked,
+      message: health.operational 
+        ? 'Connection is operational and can send messages'
+        : health.status === 'degraded'
+        ? `Connection may be experiencing issues: ${health.error}`
+        : `Connection check failed: ${health.error}`,
+    });
+  } catch (error: any) {
+    console.error('Health check error:', error);
+    res.status(500).json({ 
+      error: error.message || 'Internal server error',
+      healthy: false,
+    });
+  }
+});
+
+/**
+ * POST /api/client/whatsapp/disconnect
+ * Disconnect WhatsApp for the authenticated client's workspace
+ */
+app.post('/api/client/whatsapp/disconnect', requireClient, async (req, res) => {
+  try {
+    const clientId = req.user!.userId;
+    const client = await clientService.getClientById(clientId);
+
+    if (!client) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    // Get workspace ID from client
+    const workspaceId = client.workspaceId;
+    if (!workspaceId) {
+      return res.status(404).json({ error: 'Workspace not found' });
+    }
+
+    // Get bot instance and connection manager
+    const bot = getBotInstance();
+    if (!bot) {
+      return res.status(503).json({ error: 'Bot not initialized' });
+    }
+
+    const connectionManager = bot.getConnectionManager();
+    
+    // Check if connected
+    const connectionInfo = connectionManager.getConnectionStatus(workspaceId);
+    if (!connectionInfo || connectionInfo.status !== 'connected') {
+      return res.json({
+        success: true,
+        message: 'WhatsApp is not connected',
+      });
+    }
+
+    // Disconnect
+    await connectionManager.disconnectWorkspace(workspaceId);
+    
+    console.log(chalk.yellow(`🔌 Client ${clientId} disconnected WhatsApp for workspace ${workspaceId}`));
+
+    res.json({
+      success: true,
+      message: 'WhatsApp disconnected successfully',
+    });
+  } catch (error: any) {
+    console.error('WhatsApp disconnect error:', error);
+    res.status(500).json({ 
+      error: error.message || 'Failed to disconnect WhatsApp',
+      details: error.message,
+    });
   }
 });
 
@@ -1673,8 +2555,57 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
   }
 });
 
+// --- Admin: Connection Status Endpoints ---
+
+/**
+ * GET /api/admin/connection-status
+ * 
+ * Get connection status for all workspaces
+ * Admin only - shows which bots are connected/disconnected
+ */
+app.get('/api/admin/connection-status', requireAdmin, async (req, res) => {
+  try {
+    const statuses = await connectionMonitor.getAllConnectionStatuses();
+    const stats = await connectionMonitor.getConnectionStats();
+    
+    // Enrich with workspace details
+    const enriched = await Promise.all(
+      statuses.map(async (alert) => {
+        const workspace = await workspaceService.getWorkspaceById(alert.workspaceId);
+        return {
+          ...alert,
+          businessName: workspace?.businessName || 'Unknown',
+          email: workspace?.email || 'Unknown',
+          phoneNumbers: workspace?.phoneNumbers || [],
+        };
+      })
+    );
+    
+    res.json({
+      success: true,
+      stats,
+      connections: enriched,
+    });
+  } catch (error) {
+    console.error('Connection status error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export async function startAPIServer(): Promise<void> {
   await connectToMongoDB();
+  
+  // Initialize and start bot instance if not already created (for QR code access)
+  // CRITICAL: Bot must be started (not just initialized) for connection manager to work
+  if (!getBotInstance()) {
+    console.log(chalk.blue('🤖 Initializing bot instance for API server...'));
+    const bot = initializeBotInstance();
+    // Start the bot (this sets up connection manager and reconnects workspaces)
+    await bot.start().catch((error) => {
+      console.error(chalk.red('❌ Failed to start bot instance:'), error);
+      // Don't throw - API server can still run without bot
+    });
+  }
   
   app.listen(PORT, () => {
     console.log(chalk.blue('\n🌐 Starting API Server...\n'));

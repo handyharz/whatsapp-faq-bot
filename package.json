@@ -14,10 +14,13 @@
     "build": "tsc",
     "test": "echo \"No tests yet\" && exit 0",
     "test:mongodb": "tsx src/scripts/test-mongodb.ts",
-    "seed:client": "tsx src/scripts/seed-client.ts",
-    "seed:admin": "tsx src/scripts/seed-admin.ts",
     "check:expired": "tsx src/scripts/check-expired.ts",
-    "check:resources": "tsx src/scripts/check-resources.ts"
+    "check:resources": "tsx src/scripts/check-resources.ts",
+    "migrate:workspaces": "tsx src/scripts/migrate-to-workspaces.ts",
+    "clear:auth": "tsx src/scripts/clear-auth.ts",
+    "clear:workspace-auth": "tsx src/scripts/clear-workspace-auth.ts",
+    "seed:client": "tsx src/scripts/seed-client.ts",
+    "seed:admin": "tsx src/scripts/seed-admin.ts"
   },
   "keywords": [
     "whatsapp",

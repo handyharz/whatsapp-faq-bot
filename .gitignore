@@ -13,6 +13,7 @@ auth/
 # Logs
 logs/
 *.log
+log.md
 
 # OS files
 .DS_Store

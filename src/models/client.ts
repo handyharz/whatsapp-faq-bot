@@ -51,6 +51,9 @@ export interface Client {
   password?: string; // Hashed password (optional for existing clients)
   passwordResetToken?: string;
   passwordResetExpires?: Date;
+  emailVerified?: boolean; // Email verification status
+  emailVerificationToken?: string; // Token for email verification
+  emailVerificationExpires?: Date; // Expiration for verification token
   address?: string;
   socialMedia?: SocialMedia;
   // Legacy field - kept for backward compatibility
@@ -74,4 +77,6 @@ export interface Client {
     requestedAt: Date;
     reason?: string;
   };
+  // NEW: Workspace reference (for migration and backward compatibility)
+  workspaceId?: string; // Link to workspace (optional during migration)
 }
