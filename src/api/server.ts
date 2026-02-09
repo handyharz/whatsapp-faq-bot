@@ -25,8 +25,23 @@ const app = express();
 const PORT = process.env.API_PORT || 3001;
 
 // Middleware
+// CORS: Support multiple origins (frontend domain + localhost for dev)
+const allowedOrigins = process.env.FRONTEND_URL 
+  ? [process.env.FRONTEND_URL, 'http://localhost:3000']
+  : ['http://localhost:3000'];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️  CORS blocked origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true, // Allow cookies
 }));
 app.use(cookieParser());
@@ -52,8 +67,24 @@ function getStringParam(value: any): string | null {
 }
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', async (req, res) => {
+  try {
+    // Check database connection
+    const db = getDatabase();
+    await db.admin().ping();
+    res.json({ 
+      status: 'ok', 
+      database: 'connected',
+      timestamp: new Date().toISOString() 
+    });
+  } catch (error: any) {
+    res.status(503).json({ 
+      status: 'error', 
+      database: 'disconnected',
+      error: error?.message || 'Database connection failed',
+      timestamp: new Date().toISOString() 
+    });
+  }
 });
 
 // --- Authentication Endpoints ---
@@ -150,6 +181,18 @@ app.post('/api/auth/admin/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
+    // Check database connection first
+    try {
+      const db = getDatabase();
+      await db.admin().ping();
+    } catch (dbError: any) {
+      console.error('❌ Database connection error:', dbError?.message);
+      return res.status(503).json({ 
+        error: 'Database connection failed',
+        message: 'Please try again in a moment'
+      });
+    }
+
     console.log('🔍 Verifying credentials for:', email);
     // Verify admin credentials
     const admin = await adminService.verifyCredentials(email, password);
@@ -173,18 +216,19 @@ app.post('/api/auth/admin/login', async (req, res) => {
     });
 
     // Set httpOnly cookies
+    const isProduction = process.env.NODE_ENV === 'production';
     res.cookie('accessToken', tokens.accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       path: '/', // Make cookie available across all paths
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       path: '/', // Make cookie available across all paths
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
@@ -204,8 +248,13 @@ app.post('/api/auth/admin/login', async (req, res) => {
     console.log('✅ Admin login successful');
   } catch (error: any) {
     console.error('❌ Admin login error:', error);
+    console.error('Error message:', error?.message);
     console.error('Error stack:', error?.stack);
-    res.status(500).json({ error: error?.message || 'Internal server error' });
+    // Don't expose internal error details in production
+    const errorMessage = process.env.NODE_ENV === 'production' 
+      ? 'Internal server error' 
+      : (error?.message || 'Internal server error');
+    res.status(500).json({ error: errorMessage });
   }
 });
 
@@ -555,6 +604,18 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
   try {
     const user = req.user!;
 
+    // Check database connection first
+    try {
+      const db = getDatabase();
+      await db.admin().ping();
+    } catch (dbError: any) {
+      console.error('❌ Database connection error in /api/auth/me:', dbError?.message);
+      return res.status(503).json({ 
+        error: 'Database connection failed',
+        message: 'Please try again in a moment'
+      });
+    }
+
     if (user.role === 'client') {
       const client = await clientService.getClientById(user.userId);
       if (!client) {
@@ -585,9 +646,14 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
     }
 
     res.status(400).json({ error: 'Invalid user role' });
-  } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+  } catch (error: any) {
+    console.error('❌ Get user error:', error);
+    console.error('Error message:', error?.message);
+    console.error('Error stack:', error?.stack);
+    const errorMessage = process.env.NODE_ENV === 'production' 
+      ? 'Internal server error' 
+      : (error?.message || 'Internal server error');
+    res.status(500).json({ error: errorMessage });
   }
 });
 
@@ -2593,7 +2659,16 @@ app.get('/api/admin/connection-status', requireAdmin, async (req, res) => {
 });
 
 export async function startAPIServer(): Promise<void> {
-  await connectToMongoDB();
+  try {
+    console.log(chalk.blue('🔌 Connecting to MongoDB...'));
+    await connectToMongoDB();
+    console.log(chalk.green('✅ MongoDB connected successfully'));
+  } catch (error: any) {
+    console.error(chalk.red('❌ Failed to connect to MongoDB:'), error?.message);
+    console.error(chalk.yellow('⚠️  Server will start but database operations will fail'));
+    console.error(chalk.yellow('   Please check MONGODB_URI and MONGODB_DB_NAME environment variables'));
+    // Don't throw - allow server to start so health check can report the issue
+  }
   
   // Initialize and start bot instance if not already created (for QR code access)
   // CRITICAL: Bot must be started (not just initialized) for connection manager to work
